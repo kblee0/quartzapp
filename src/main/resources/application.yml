@@ -1,0 +1,39 @@
+server:
+  port: 8080
+  compression:
+    enabled: true
+
+spring:
+  application:
+    name: quartzManager
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # https://www.devglan.com/online-tools/jasypt-online-encryption-decryption
+    # Password: System.getenv("JASYPT_PASSWD")
+    url: ENC(P1mUsyLqf3knuUcUmdwqfIvePtNRVbfQ1+mWrKDP4llgjOX/a4/lyDwB8OAtK9QP)
+    password: ENC(nakhqJb9GyYZpIgFUW37/Q==)
+    username: ENC(hWgPVHRFzZT9ox2650Gbsg==)
+  quartz:
+    job-store-type: jdbc
+    initialize-schema: always
+    properties:
+      org:
+        quartz:
+          scheduler:
+            instanceId: AUTO
+            classLoadHelper.class: com.home.quartzapp.scheduler.exception.ClassNotFoundIgnoringClassLoadHelper
+          jobStore:
+            class: org.quartz.impl.jdbcjobstore.JobStoreTX
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+            tablePrefix: QRTZ_
+            isClustered: false
+            dataSource: myDS
+          dataSource:
+            myDS:
+              provider: hikaricp
+              driver: com.mysql.cj.jdbc.Driver
+              URL: ENC(P1mUsyLqf3knuUcUmdwqfIvePtNRVbfQ1+mWrKDP4llgjOX/a4/lyDwB8OAtK9QP)
+              password: ENC(nakhqJb9GyYZpIgFUW37/Q==)
+              username: ENC(hWgPVHRFzZT9ox2650Gbsg==)
+mybatis:
+  mapper-locations: classpath:mapper/**/**/**.xml

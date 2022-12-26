@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+                        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.home.quartzapp.scheduler.entity.JobHistory">
+	<select id="getAllJobHistory" resultType="com.home.quartzapp.scheduler.entity.JobHistory">
+		select count(serial) totSize from board
+		where mid     like '%${_parameter}%'
+		or    subject like '%${_parameter}%'
+		or    doc     like '%${_parameter}%'
+	</select>
+
+</mapper>
