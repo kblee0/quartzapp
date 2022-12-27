@@ -11,13 +11,14 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 @Slf4j
 public class JasyptConfig {
+    final String JASYPT_PASSSWORD_ENV_NAME = "JASYPT_PASSWD";
 
     @Bean("jasyptStringEncryptor")
     public StringEncryptor stringEncryptor() {
         log.debug(":: stringEncryptor start");
         PooledPBEStringEncryptor encryptor = new PooledPBEStringEncryptor();
         SimpleStringPBEConfig config = new SimpleStringPBEConfig();
-        config.setPassword(System.getenv("JASYPT_PASSWD"));
+        config.setPassword(System.getenv(JASYPT_PASSSWORD_ENV_NAME));
         config.setAlgorithm("PBEWithMD5AndDES");
         config.setKeyObtentionIterations("1000");
         config.setPoolSize("1");
