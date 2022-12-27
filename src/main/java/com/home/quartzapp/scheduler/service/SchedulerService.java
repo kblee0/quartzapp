@@ -114,6 +114,7 @@ public class SchedulerService {
                     .storeDurably()
                     .withIdentity(jobKey)
                     .withDescription(jobInfo.getDescription())
+                    .setJobData(jobInfo.getJobDataMap())
                     .build();
         } catch (ClassNotFoundException e) {
             throw new ApiException(ErrorCode.JOB_CLASS_NOT_FOUND, e);

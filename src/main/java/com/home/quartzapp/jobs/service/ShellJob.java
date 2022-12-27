@@ -16,11 +16,15 @@ public class ShellJob extends QuartzJobBean {
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
         int exitCode;
         
-        String command = "dir";
+        String command = context.getJobDetail().getJobDataMap().getString("command");
+        boolean outputToLog = context.getJobDetail().getJobDataMap().getBoolean("outputToLog");
         
+        if(command == null) {
+            throw new IllegalArgumentException("ShellJob :: The \"command\" parameter is required.");
+        }
         log.info("============================================");
         try {
-            exitCode = processBuilder(null, command, false);
+            exitCode = processBuilder(null, command, outputToLog);
             log.info("Sehll Command Exit Code: {}", exitCode);
             } catch (IOException e) {
             log.error("IOException: [{}] command failed. {}", command, e);
@@ -30,7 +34,7 @@ public class ShellJob extends QuartzJobBean {
         log.info("============================================");
     }
 
-    private int processBuilder(String workingDir, String command, boolean stdoutToLog) throws IOException, InterruptedException {
+    private int processBuilder(String workingDir, String command, boolean outputToLog) throws IOException, InterruptedException {
         boolean isWindows;
         File cwd;
 
@@ -60,7 +64,7 @@ public class ShellJob extends QuartzJobBean {
 
         String line;
         while ((line = reader.readLine()) != null) {
-            if(stdoutToLog) {
+            if(outputToLog) {
                 log.info(line);
             }
         }
