@@ -29,5 +29,5 @@ public class JobListener implements org.quartz.JobListener {
             context.getJobDetail().getKey(),
             context.getFireInstanceId(),
             jobException == null ? "SUCCESS" : "FAILED");
-}
+    }
 }

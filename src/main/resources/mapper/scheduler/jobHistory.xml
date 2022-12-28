@@ -1,12 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
                         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.home.quartzapp.scheduler.entity.JobHistory">
-	<select id="getAllJobHistory" resultType="com.home.quartzapp.scheduler.entity.JobHistory">
-		select count(serial) totSize from board
-		where mid     like '%${_parameter}%'
-		or    subject like '%${_parameter}%'
-		or    doc     like '%${_parameter}%'
+<mapper namespace="com.home.quartzapp.scheduler.dao.JobHistory">
+	<select id="getJobHistory" resultType="com.home.quartzapp.scheduler.entity.JobHistory">
+		SELECT
+			SCHED_NAME, ENTRY_ID, TRIGGER_NAME, TRIGGER_GROUP, JOB_NAME, JOB_GROUP, JOB_DATA, START_TIME, END_TIME, STATE, RESULT
+		FROM QRTZ_JOB_HISTORY
+		WHERE SCHED_NAME = #{schedName}
+		AND   ENTRY_ID   = #{entryId}
 	</select>
-
+	<insert id="createJobHistory">
+		INSERT INTO QRTZ_JOB_HISTORY
+			(SCHED_NAME, ENTRY_ID, TRIGGER_NAME, TRIGGER_GROUP, JOB_NAME, JOB_GROUP, JOB_DATA, START_TIME, END_TIME, STATE, RESULT)
+		VALUES
+			(#{schedName}, #{entryId}, #{triggerName}, #{triggerGroup}, #{jobName}, #{jobGroup}, #{jobData}, #{startTime}, #{endTime}, #{state}, #{result})
+	</insert>
+	<update id="updateJobHistory">
+		UPDATE QRTZ_JOB_HISTORY
+		SET END_TIME = #{endTime},
+			STATE = #{state},
+			RESULT = #{result}
+		WHERE SCHED_NAME = #{schedName}
+		AND   ENTRY_ID   = #{entryId}
+	</update>
+	<select id="getJobHistoryList" resultType="com.home.quartzapp.scheduler.entity.JobHistory">
+		SELECT
+			SCHED_NAME, ENTRY_ID, TRIGGER_NAME, TRIGGER_GROUP, JOB_NAME, JOB_GROUP, JOB_DATA, START_TIME, END_TIME, STATE, RESULT
+		FROM QRTZ_JOB_HISTORY
+		WHERE JOB_NAME = #{jobName}
+		AND   JOB_GROUP = #{jobGroup}
+		ORDER BY START_TIME DESC
+	</select>
 </mapper>

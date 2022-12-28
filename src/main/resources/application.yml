@@ -21,6 +21,7 @@ spring:
       org:
         quartz:
           scheduler:
+            instanceName: quartzapp01
             instanceId: AUTO
             classLoadHelper:
               class: com.home.quartzapp.scheduler.exception.ClassNotFoundIgnoringClassLoadHelper
