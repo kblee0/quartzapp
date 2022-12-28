@@ -32,9 +32,9 @@ public class JobInfo {
     private JobDataMap jobDataMap;
 
     // Trigger
-    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
     private LocalDateTime startTime;
-    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'")
     private LocalDateTime endTime;
 
     // SimpleTrigger

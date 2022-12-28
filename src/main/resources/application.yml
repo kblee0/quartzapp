@@ -15,18 +15,24 @@ spring:
     username: ENC(hWgPVHRFzZT9ox2650Gbsg==)
   quartz:
     job-store-type: jdbc
-    initialize-schema: always
+    jdbc:
+      initialize-schema: never
     properties:
       org:
         quartz:
           scheduler:
             instanceId: AUTO
-            classLoadHelper.class: com.home.quartzapp.scheduler.exception.ClassNotFoundIgnoringClassLoadHelper
+            classLoadHelper:
+              class: com.home.quartzapp.scheduler.exception.ClassNotFoundIgnoringClassLoadHelper
+          threadPool:
+            class: org.quartz.simpl.SimpleThreadPool
+            threadCount: 5
           jobStore:
             class: org.quartz.impl.jdbcjobstore.JobStoreTX
             driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
             tablePrefix: QRTZ_
             isClustered: false
+            clusterCheckinInterval: 20000
             dataSource: myDS
           dataSource:
             myDS:
@@ -35,5 +41,7 @@ spring:
               URL: ENC(P1mUsyLqf3knuUcUmdwqfIvePtNRVbfQ1+mWrKDP4llgjOX/a4/lyDwB8OAtK9QP)
               password: ENC(nakhqJb9GyYZpIgFUW37/Q==)
               username: ENC(hWgPVHRFzZT9ox2650Gbsg==)
+              maxConnections: 5
+              validationQuery: select 0 from dual
 mybatis:
   mapper-locations: classpath:mapper/**/**/**.xml
