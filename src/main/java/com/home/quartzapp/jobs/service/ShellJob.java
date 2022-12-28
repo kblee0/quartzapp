@@ -4,41 +4,66 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+
+import org.quartz.DisallowConcurrentExecution;
+import org.quartz.InterruptableJob;
+import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.UnableToInterruptJobException;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ShellJob extends QuartzJobBean {
+@DisallowConcurrentExecution
+public class ShellJob extends QuartzJobBean implements InterruptableJob {
+    private Thread currentThread = null;
+    private Process shellProcess = null;
+    private JobDetail jobDetail = null;
+    
     @Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
+        String cwd;
+        String command;
+        boolean outputToLog;
         int exitCode;
         
-        String command = context.getJobDetail().getJobDataMap().getString("command");
-        boolean outputToLog = context.getJobDetail().getJobDataMap().getBoolean("outputToLog");
-        
+        currentThread = Thread.currentThread();
+        jobDetail = context.getJobDetail();
+        cwd = jobDetail.getJobDataMap().getString("cwd");
+        command = jobDetail.getJobDataMap().getString("command");
+        outputToLog = jobDetail.getJobDataMap().getBoolean("outputToLog");
+
         if(command == null) {
-            throw new IllegalArgumentException("ShellJob :: The \"command\" parameter is required.");
+            throw new IllegalArgumentException(
+                String.format("%s :: The \"command\" parameter is required.", jobDetail.getKey()));
         }
-        log.info("============================================");
         try {
-            exitCode = processBuilder(null, command, outputToLog);
-            log.info("Sehll Command Exit Code: {}", exitCode);
-            } catch (IOException e) {
-            log.error("IOException: [{}] command failed. {}", command, e);
+            exitCode = processBuilder(cwd, command, outputToLog);
+            log.info("{} :: exitCode: {}", jobDetail.getKey(), exitCode);
+        } catch (IOException e) {
+            throw new JobExecutionException(
+                String.format("%s :: [%s] command failed with IOException.", jobDetail.getKey(), command),
+                e,
+                false);
         } catch (InterruptedException e) {
-            log.error("InterruptedException: [{}] command failed. {}", command, e);
+            throw new JobExecutionException(
+                String.format("%s :: [%s] command failed with InterruptedException.", jobDetail.getKey(), command),
+                e,
+                false);
         }
-        log.info("============================================");
+        if(exitCode != 0) {
+            throw new JobExecutionException(
+                String.format("%s :: The exit code of dir command is non-zero. (code=%d)", jobDetail.getKey(), exitCode),
+                false);
+        }
     }
 
     private int processBuilder(String workingDir, String command, boolean outputToLog) throws IOException, InterruptedException {
         boolean isWindows;
         File cwd;
-
-
+        
         if(workingDir != null) {
             cwd = new File(workingDir);
         }
@@ -56,11 +81,10 @@ public class ShellJob extends QuartzJobBean {
             builder.command("sh", "-c", command);
         }
 
-        log.info("Working Dir: {}", cwd.getAbsolutePath());
-        log.info("Command    : {}", command);
+        log.info("{} :: cwd: {}, comand: {}", jobDetail.getKey(), cwd.getAbsolutePath(), command);
 
-        Process process = builder.start();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        shellProcess = builder.start();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(shellProcess.getInputStream()));
 
         String line;
         while ((line = reader.readLine()) != null) {
@@ -69,8 +93,31 @@ public class ShellJob extends QuartzJobBean {
             }
         }
 
-        int exitCode = process.waitFor();
+        int exitCode = shellProcess.waitFor();
 
         return exitCode;
+    }
+
+    @Override
+    public void interrupt() throws UnableToInterruptJobException {
+        log.info("{} :: Job interrupt", jobDetail.getKey());
+        
+            destoryProcessHandleTree(shellProcess.toHandle());
+            currentThread.interrupt();
+    }
+
+    private void destoryProcessHandleTree(ProcessHandle handle) {
+        handle.descendants().forEach((child) -> destoryProcessHandleTree(child));
+        
+        String commandLine = handle.info().command().orElse("(null)");
+
+        if(handle.info().arguments().isPresent()) {
+            commandLine += " " + String.join(" ", handle.info().arguments().get());
+        }
+        log.info("{} :: destroy process. pid: {}, command: {}",
+            jobDetail.getKey(),
+            handle.pid(), 
+            commandLine);
+        handle.destroy();
     }
 }

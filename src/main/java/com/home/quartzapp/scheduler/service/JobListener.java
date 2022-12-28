@@ -15,18 +15,19 @@ public class JobListener implements org.quartz.JobListener {
     }
 
     @Override
-    public void jobToBeExecuted(JobExecutionContext context) {
-        log.info("jobToBeExecuted at :: jobKey : {}", context.getJobDetail().getKey());
-        
+    public void jobExecutionVetoed(JobExecutionContext context) {
     }
 
     @Override
-    public void jobExecutionVetoed(JobExecutionContext context) {
-        log.info("jobExecutionVetoed :: jobKey : {}", context.getJobDetail().getKey());
+    public void jobToBeExecuted(JobExecutionContext context) {
+        log.info("{} :: id: {}, jobToBeExecuted.", context.getJobDetail().getKey(), context.getFireInstanceId());
     }
 
     @Override
     public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
-        log.info("jobWasExecuted :: jobKey : {}", context.getJobDetail().getKey());
-    }
+        log.info("{} :: id: {}, result: {}, jobWasExecuted.",
+            context.getJobDetail().getKey(),
+            context.getFireInstanceId(),
+            jobException == null ? "SUCCESS" : "FAILED");
+}
 }
