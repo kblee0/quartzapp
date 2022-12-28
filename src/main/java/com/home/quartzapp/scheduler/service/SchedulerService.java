@@ -76,6 +76,11 @@ public class SchedulerService {
         scheduler = schedulerFactoryBean.getScheduler();
 
         try {
+            JobDetail jobDetail = createJobDetail(jobInfo);
+
+            // relpace job detail
+            scheduler.addJob(jobDetail, true);
+
             if(scheduler.getTrigger(newTrigger.getKey()) != null) {
                 dt = scheduler.rescheduleJob(newTrigger.getKey(), newTrigger);
             }
