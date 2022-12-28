@@ -54,7 +54,6 @@ public class ScheduleController {
         schedulerService.deleteJob(jobInfo);
 
         return new ResponseEntity<>(
-                jobInfo,
                 HttpStatus.NO_CONTENT);
     }
 
