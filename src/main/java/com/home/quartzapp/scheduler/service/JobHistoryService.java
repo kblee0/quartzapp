@@ -10,6 +10,8 @@ import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.home.quartzapp.scheduler.dao.JobHistoryDAO;
 import com.home.quartzapp.scheduler.entity.JobHistory;
 import com.home.quartzapp.scheduler.model.JobStatus;
@@ -48,6 +50,7 @@ public class JobHistoryService {
 
     private JobHistory createJobHistory(JobExecutionContext context, JobStatus jobStatus) {
         JobHistory jobHistory = new JobHistory();
+        ObjectMapper mapper = new ObjectMapper();
 
         try {
             jobHistory.setSchedName(context.getScheduler().getSchedulerName());
@@ -56,12 +59,16 @@ public class JobHistoryService {
             jobHistory.setTriggerGroup(context.getTrigger().getKey().getGroup());
             jobHistory.setJobName(context.getJobDetail().getKey().getName());
             jobHistory.setJobGroup(context.getJobDetail().getKey().getGroup());
-            jobHistory.setJobData(context.getJobDetail().getJobDataMap().toString());
             jobHistory.setStartTime(context.getFireTime());
             jobHistory.setStatus(jobStatus.name());
+            jobHistory.setJobData(mapper.writeValueAsString(context.getJobDetail().getJobDataMap()));
         } catch (SchedulerException e) {
             log.error("createJobHistory :: {}", e);
             return null;
+        } catch (JsonProcessingException e) {
+            log.error("jobDataMap writeValueAsString error :: jobDataMap: {}, {}",
+                context.getJobDetail().getJobDataMap(), 
+                e);
         }
 
         return jobHistory;
