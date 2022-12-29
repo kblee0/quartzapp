@@ -1,31 +1,85 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
                         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.home.quartzapp.scheduler.dao.JobHistory">
-	<select id="getJobHistory" resultType="com.home.quartzapp.scheduler.entity.JobHistory">
+<mapper namespace="com.home.quartzapp.scheduler.dao.JobHistoryDAO">
+	<resultMap id="jobHistoryResult" type="JobHistory">
+		<result property="schedName" column="SCHED_NAME"/>
+		<result property="entryId" column="ENTRY_ID"/>
+		<result property="triggerName" column="TRIGGER_NAME"/>
+		<result property="triggerGroup" column="TRIGGER_GROUP"/>
+		<result property="jobName" column="JOB_NAME"/>
+		<result property="jobGroup" column="JOB_GROUP"/>
+		<result property="jobData" column="JOB_DATA"/>
+		<result property="startTime" column="START_TIME"/>
+		<result property="endTime" column="END_TIME"/>
+		<result property="status" column="STATUS"/>
+		<result property="exitMessage" column="EXIT_MESSAGE"/>
+	</resultMap>
+	
+	<select id="getJobHistory" resultMap="jobHistoryResult">
 		SELECT
-			SCHED_NAME, ENTRY_ID, TRIGGER_NAME, TRIGGER_GROUP, JOB_NAME, JOB_GROUP, JOB_DATA, START_TIME, END_TIME, STATE, RESULT
+			SCHED_NAME,
+			ENTRY_ID,
+			TRIGGER_NAME,
+			TRIGGER_GROUP,
+			JOB_NAME,
+			JOB_GROUP,
+			JOB_DATA,
+			START_TIME,
+			END_TIME,
+			STATUS,
+			EXIT_MESSAGE
 		FROM QRTZ_JOB_HISTORY
 		WHERE SCHED_NAME = #{schedName}
 		AND   ENTRY_ID   = #{entryId}
 	</select>
-	<insert id="createJobHistory">
-		INSERT INTO QRTZ_JOB_HISTORY
-			(SCHED_NAME, ENTRY_ID, TRIGGER_NAME, TRIGGER_GROUP, JOB_NAME, JOB_GROUP, JOB_DATA, START_TIME, END_TIME, STATE, RESULT)
-		VALUES
-			(#{schedName}, #{entryId}, #{triggerName}, #{triggerGroup}, #{jobName}, #{jobGroup}, #{jobData}, #{startTime}, #{endTime}, #{state}, #{result})
+	<insert id="insertJobHistory">
+		INSERT INTO QRTZ_JOB_HISTORY (
+			SCHED_NAME,
+			ENTRY_ID,
+			TRIGGER_NAME,
+			TRIGGER_GROUP,
+			JOB_NAME,
+			JOB_GROUP,
+			JOB_DATA,
+			START_TIME,
+			END_TIME,
+			STATUS,
+			EXIT_MESSAGE)
+		VALUES (
+			#{schedName},
+			#{entryId},
+			#{triggerName},
+			#{triggerGroup},
+			#{jobName},
+			#{jobGroup},
+			#{jobData},
+			#{startTime},
+			#{endTime},
+			#{status},
+			#{exitMessage})
 	</insert>
 	<update id="updateJobHistory">
 		UPDATE QRTZ_JOB_HISTORY
 		SET END_TIME = #{endTime},
-			STATE = #{state},
-			RESULT = #{result}
+			STATUS = #{status},
+			EXIT_MESSAGE = #{exitMessage}
 		WHERE SCHED_NAME = #{schedName}
 		AND   ENTRY_ID   = #{entryId}
 	</update>
-	<select id="getJobHistoryList" resultType="com.home.quartzapp.scheduler.entity.JobHistory">
+	<select id="getJobHistoryList" resultMap="jobHistoryResult">
 		SELECT
-			SCHED_NAME, ENTRY_ID, TRIGGER_NAME, TRIGGER_GROUP, JOB_NAME, JOB_GROUP, JOB_DATA, START_TIME, END_TIME, STATE, RESULT
+			SCHED_NAME,
+			ENTRY_ID,
+			TRIGGER_NAME,
+			TRIGGER_GROUP,
+			JOB_NAME,
+			JOB_GROUP,
+			JOB_DATA,
+			START_TIME,
+			END_TIME,
+			STATUS,
+			EXIT_MESSAGE
 		FROM QRTZ_JOB_HISTORY
 		WHERE JOB_NAME = #{jobName}
 		AND   JOB_GROUP = #{jobGroup}

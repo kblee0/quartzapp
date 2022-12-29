@@ -45,4 +45,9 @@ spring:
               maxConnections: 5
               validationQuery: select 0 from dual
 mybatis:
-  mapper-locations: classpath:mapper/**/**/**.xml
+  mapper-locations:
+  - classpath:mapper/**/**/**.xml
+  type-aliases-package: com.home.quartzapp.scheduler.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    default-fetch-size: 500
