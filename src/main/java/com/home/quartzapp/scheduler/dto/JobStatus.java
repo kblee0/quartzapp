@@ -16,10 +16,11 @@ public class JobStatus {
 
 	String jobState;
 
-	@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
+	@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
 	private LocalDateTime lastFiredTime;
-	@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssXXX")
+	@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
 	private LocalDateTime nextFireTime;
 
+	@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
 	private final LocalDateTime timestamp = LocalDateTime.now();
 }
