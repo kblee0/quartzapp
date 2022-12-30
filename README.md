@@ -1,4 +1,10 @@
 # quartzapp
 quartz application
 
-Application that manages quartz jobs using REST API.
+Supports the function of dynamically managing Quartz Jobs using the management API.
+
+Development environment:
+- JAVA 11
+- Spring Boot 2.7.7
+- MyBatis
+- MySql
