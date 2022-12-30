@@ -65,6 +65,14 @@ spring:
     url: ENC(P1mUsyLqf3knuUcUmdwqfIvePtNRVbfQ1+mWrKDP4llgjOX/a4/lyDwB8OAtK9QP)
     password: ENC(nakhqJb9GyYZpIgFUW37/Q==)
     username: ENC(hWgPVHRFzZT9ox2650Gbsg==)
+    hikari:
+      maximum-pool-size: 3
+      connection-timeout: 5000
+      connection-init-sql: SELECT 1
+      validation-timeout: 2000
+      minimum-idle: 10
+      idle-timeout: 600000
+      max-lifetime: 1800000
   quartz:
     properties:
       org:
