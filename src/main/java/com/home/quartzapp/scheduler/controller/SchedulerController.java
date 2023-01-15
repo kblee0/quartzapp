@@ -14,63 +14,63 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.home.quartzapp.scheduler.dto.ApiError;
-import com.home.quartzapp.scheduler.dto.JobInfo;
-import com.home.quartzapp.scheduler.dto.JobList;
-import com.home.quartzapp.scheduler.dto.JobStatus;
+import com.home.quartzapp.scheduler.dto.ApiErrorDto;
+import com.home.quartzapp.scheduler.dto.JobInfoDto;
+import com.home.quartzapp.scheduler.dto.JobListDto;
+import com.home.quartzapp.scheduler.dto.JobStatusDto;
 import com.home.quartzapp.scheduler.exception.ErrorCode;
 import com.home.quartzapp.scheduler.service.SchedulerService;
 
 @Validated
 @RestController
-public class ScheduleController {
+public class SchedulerController {
     @Autowired
     SchedulerService schedulerService;
 
     @RequestMapping(value = "/scheduler/jobs", method = RequestMethod.POST)
-    public ResponseEntity<?> addJob(@Valid @RequestBody JobInfo jobInfo) {
-        JobKey jobKey = new JobKey(jobInfo.getName(), jobInfo.getGroup());
-        JobStatus jobStatus;
+    public ResponseEntity<?> addJob(@Valid @RequestBody JobInfoDto jobInfoDto) {
+        JobKey jobKey = new JobKey(jobInfoDto.getName(), jobInfoDto.getGroup());
+        JobStatusDto jobStatusDto;
 
         if(schedulerService.isJobExists(jobKey)) {
-            return ApiError.create(ErrorCode.JOB_ALREADY_EXIST);
+            return ApiErrorDto.create(ErrorCode.JOB_ALREADY_EXIST);
         }
 
-        jobStatus = schedulerService.addJob(jobInfo);
+        jobStatusDto = schedulerService.addJob(jobInfoDto);
 
         return new ResponseEntity<>(
-                jobStatus,
+                jobStatusDto,
                 HttpStatus.CREATED);
     }
 
     @RequestMapping(value = "/scheduler/jobs", method = RequestMethod.DELETE)
-    public ResponseEntity<?> deleteJob(@RequestBody JobInfo jobInfo) {
-        JobKey jobKey = new JobKey(jobInfo.getName(), jobInfo.getGroup());
+    public ResponseEntity<?> deleteJob(@RequestBody JobInfoDto jobInfoDto) {
+        JobKey jobKey = new JobKey(jobInfoDto.getName(), jobInfoDto.getGroup());
 
         if(!schedulerService.isJobExists(jobKey)) {
-            return ApiError.create(ErrorCode.JOB_DOES_NOT_EXIST);
+            return ApiErrorDto.create(ErrorCode.JOB_DOES_NOT_EXIST);
         }
 
-        schedulerService.deleteJob(jobInfo);
+        schedulerService.deleteJob(jobInfoDto);
 
         return new ResponseEntity<>(
                 HttpStatus.NO_CONTENT);
     }
 
     @RequestMapping(value = "/scheduler/jobs", method = RequestMethod.PUT)
-    public ResponseEntity<?> updateJob(@RequestBody JobInfo jobInfo) {
-        JobKey jobKey = new JobKey(jobInfo.getName(), jobInfo.getGroup());
+    public ResponseEntity<?> updateJob(@RequestBody JobInfoDto jobInfoDto) {
+        JobKey jobKey = new JobKey(jobInfoDto.getName(), jobInfoDto.getGroup());
 
         if(!schedulerService.isJobExists(jobKey)) {
-            return ApiError.create(ErrorCode.JOB_DOES_NOT_EXIST);
+            return ApiErrorDto.create(ErrorCode.JOB_DOES_NOT_EXIST);
         }
 
-        JobStatus jobStatus;
+        JobStatusDto jobStatusDto;
 
-        jobStatus = schedulerService.updateJob(jobInfo);
+        jobStatusDto = schedulerService.updateJob(jobInfoDto);
 
         return new ResponseEntity<>(
-            jobStatus,
+            jobStatusDto,
             HttpStatus.OK
         );
     }
@@ -82,15 +82,15 @@ public class ScheduleController {
         JobKey jobKey = new JobKey(jobName, jobGroup);
 
         if(!schedulerService.isJobExists(jobKey)) {
-            return ApiError.create(ErrorCode.JOB_DOES_NOT_EXIST);
+            return ApiErrorDto.create(ErrorCode.JOB_DOES_NOT_EXIST);
         }
     
-        JobStatus jobStatus;
+        JobStatusDto jobStatusDto;
 
-        jobStatus = schedulerService.getJobStatus(jobKey);
+        jobStatusDto = schedulerService.getJobStatus(jobKey);
 
         return new ResponseEntity<>(
-            jobStatus,
+            jobStatusDto,
             HttpStatus.OK);
     }
 
@@ -98,12 +98,12 @@ public class ScheduleController {
     public ResponseEntity<?> getJobList(
         @PathVariable(name = "jobGroup", required = false) String jobGroup) {
 
-        JobList jobList;
+        JobListDto jobListDto;
 
-        jobList = schedulerService.getJobList(jobGroup);
+        jobListDto = schedulerService.getJobList(jobGroup);
 
         return new ResponseEntity<>(
-            jobList,
+            jobListDto,
             HttpStatus.OK);
     }
 
@@ -114,15 +114,15 @@ public class ScheduleController {
         JobKey jobKey = new JobKey(jobName, jobGroup);
 
         if(!schedulerService.isJobExists(jobKey)) {
-            return ApiError.create(ErrorCode.JOB_DOES_NOT_EXIST);
+            return ApiErrorDto.create(ErrorCode.JOB_DOES_NOT_EXIST);
         }
     
-        JobStatus jobStatus;
+        JobStatusDto jobStatusDto;
 
-        jobStatus = schedulerService.pauseJob(jobKey);
+        jobStatusDto = schedulerService.pauseJob(jobKey);
 
         return new ResponseEntity<>(
-            jobStatus,
+            jobStatusDto,
             HttpStatus.OK);
     }
 
@@ -133,15 +133,15 @@ public class ScheduleController {
         JobKey jobKey = new JobKey(jobName, jobGroup);
 
         if(!schedulerService.isJobExists(jobKey)) {
-            return ApiError.create(ErrorCode.JOB_DOES_NOT_EXIST);
+            return ApiErrorDto.create(ErrorCode.JOB_DOES_NOT_EXIST);
         }
     
-        JobStatus jobStatus;
+        JobStatusDto jobStatusDto;
 
-        jobStatus = schedulerService.resumeJob(jobKey);
+        jobStatusDto = schedulerService.resumeJob(jobKey);
 
         return new ResponseEntity<>(
-            jobStatus,
+            jobStatusDto,
             HttpStatus.OK);
     }
 
@@ -152,15 +152,15 @@ public class ScheduleController {
         JobKey jobKey = new JobKey(jobName, jobGroup);
 
         if(!schedulerService.isJobExists(jobKey)) {
-            return ApiError.create(ErrorCode.JOB_DOES_NOT_EXIST);
+            return ApiErrorDto.create(ErrorCode.JOB_DOES_NOT_EXIST);
         }
     
-        JobStatus jobStatus;
+        JobStatusDto jobStatusDto;
 
-        jobStatus = schedulerService.interruptJob(jobKey);
+        jobStatusDto = schedulerService.interruptJob(jobKey);
 
         return new ResponseEntity<>(
-            jobStatus,
+            jobStatusDto,
             HttpStatus.OK);
     }
 }

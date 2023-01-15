@@ -27,9 +27,9 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.home.quartzapp.scheduler.dto.JobInfo;
-import com.home.quartzapp.scheduler.dto.JobList;
-import com.home.quartzapp.scheduler.dto.JobStatus;
+import com.home.quartzapp.scheduler.dto.JobInfoDto;
+import com.home.quartzapp.scheduler.dto.JobListDto;
+import com.home.quartzapp.scheduler.dto.JobStatusDto;
 import com.home.quartzapp.scheduler.exception.ApiException;
 import com.home.quartzapp.scheduler.exception.ErrorCode;
 import com.home.quartzapp.scheduler.util.DateTimeUtil;
@@ -47,13 +47,13 @@ public class SchedulerService {
     // @Autowired
     // private ApplicationContext context;
 
-    public JobStatus addJob(JobInfo jobInfo) {
+    public JobStatusDto addJob(JobInfoDto jobInfoDto) {
         JobDetail jobDetail;
         Trigger trigger;
 
         try {
-            jobDetail = this.createJobDetail(jobInfo);
-            trigger = this.createTrigger(jobInfo);
+            jobDetail = this.createJobDetail(jobInfoDto);
+            trigger = this.createTrigger(jobInfoDto);
             
             Scheduler scheduler = schedulerFactoryBean.getScheduler();
 
@@ -61,22 +61,22 @@ public class SchedulerService {
             log.debug("Job with jobKey : {} scheduled successfully at date : {}", trigger.getJobKey(), dt);
             return getJobStatus(trigger.getJobKey());
         } catch (SchedulerException e) {
-            log.error("error occurred while scheduling with jobInfo : {}", jobInfo, e);
+            log.error("error occurred while scheduling with jobInfoDto : {}", jobInfoDto, e);
             throw new ApiException(ErrorCode.JOB_SCHEDULER_EXCEPTION, e);
         }
     }
 
-    public JobStatus updateJob(JobInfo jobInfo) {
+    public JobStatusDto updateJob(JobInfoDto jobInfoDto) {
         Trigger newTrigger;
         Scheduler scheduler;
         Date dt;
 
-        newTrigger = this.createTrigger(jobInfo);
+        newTrigger = this.createTrigger(jobInfoDto);
 
         scheduler = schedulerFactoryBean.getScheduler();
 
         try {
-            JobDetail jobDetail = createJobDetail(jobInfo);
+            JobDetail jobDetail = createJobDetail(jobInfoDto);
 
             // relpace job detail
             scheduler.addJob(jobDetail, true);
@@ -88,17 +88,17 @@ public class SchedulerService {
                 dt = scheduler.scheduleJob(newTrigger);
             }
         } catch (SchedulerException e) {
-            log.error("error occurred while scheduling with jobInfo : {}", jobInfo, e);
+            log.error("error occurred while scheduling with jobInfoDto : {}", jobInfoDto, e);
             throw new ApiException(ErrorCode.JOB_SCHEDULER_EXCEPTION, e);
         }
-        log.debug("Job with jobInfo : {} rescheduled successfully at date : {}", jobInfo, dt);
+        log.debug("Job with jobInfoDto : {} rescheduled successfully at date : {}", jobInfoDto, dt);
 
         return getJobStatus(newTrigger.getJobKey());
     }
 
 
-    public boolean deleteJob(JobInfo jobInfo) {
-        JobKey jobKey = new JobKey(jobInfo.getName(), jobInfo.getGroup());
+    public boolean deleteJob(JobInfoDto jobInfoDto) {
+        JobKey jobKey = new JobKey(jobInfoDto.getName(), jobInfoDto.getGroup());
         log.debug("[schedulerdebug] deleting job with jobKey : {}", jobKey);
         try {
             boolean rv = schedulerFactoryBean.getScheduler().deleteJob(jobKey);
@@ -110,40 +110,40 @@ public class SchedulerService {
     }
 
     /* Private Methods */
-    private JobDetail createJobDetail(JobInfo jobInfo) {
-        JobKey jobKey = new JobKey(jobInfo.getName(), jobInfo.getGroup());
+    private JobDetail createJobDetail(JobInfoDto jobInfoDto) {
+        JobKey jobKey = new JobKey(jobInfoDto.getName(), jobInfoDto.getGroup());
         
         try {
             return JobBuilder.newJob()
-                    .ofType(Class.forName(jobInfo.getJobClassName()).asSubclass(Job.class))
+                    .ofType(Class.forName(jobInfoDto.getJobClassName()).asSubclass(Job.class))
                     .storeDurably()
                     .withIdentity(jobKey)
-                    .withDescription(jobInfo.getDescription())
-                    .setJobData(jobInfo.getJobDataMap())
+                    .withDescription(jobInfoDto.getDescription())
+                    .setJobData(jobInfoDto.getJobDataMap())
                     .build();
         } catch (ClassNotFoundException e) {
             throw new ApiException(ErrorCode.JOB_CLASS_NOT_FOUND, e);
         }
     }
 
-    private Trigger createTrigger(JobInfo jobInfo) {
+    private Trigger createTrigger(JobInfoDto jobInfoDto) {
         TriggerBuilder<Trigger> triggerBuilder = TriggerBuilder
                                                     .newTrigger()
-                                                    .forJob(jobInfo.getName(), jobInfo.getGroup())
-                                                    .withIdentity(jobInfo.getName(), jobInfo.getGroup());
+                                                    .forJob(jobInfoDto.getName(), jobInfoDto.getGroup())
+                                                    .withIdentity(jobInfoDto.getName(), jobInfoDto.getGroup());
 
-        if(jobInfo.getStartTime() != null) {
-            Date startAt = Date.from(jobInfo.getStartTime().atZone(ZoneId.systemDefault()).toInstant());
+        if(jobInfoDto.getStartTime() != null) {
+            Date startAt = Date.from(jobInfoDto.getStartTime().atZone(ZoneId.systemDefault()).toInstant());
             triggerBuilder.startAt(startAt);
         }
-        if(jobInfo.getEndTime() != null) {
-            Date endAt = Date.from(jobInfo.getEndTime().atZone(ZoneId.systemDefault()).toInstant());
+        if(jobInfoDto.getEndTime() != null) {
+            Date endAt = Date.from(jobInfoDto.getEndTime().atZone(ZoneId.systemDefault()).toInstant());
             triggerBuilder.endAt(endAt);
         }
 
-        String cronExpression = jobInfo.getCronExpression();
+        String cronExpression = jobInfoDto.getCronExpression();
 
-        if (jobInfo.isCronJob()) {
+        if (jobInfoDto.isCronJob()) {
             if (!isValidExpression(cronExpression)) {
                 throw new IllegalArgumentException("Provided expression " + cronExpression + " is not a valid cron expression");
             }
@@ -180,25 +180,25 @@ public class SchedulerService {
             return triggerBuilder
                     .withSchedule(
                         SimpleScheduleBuilder
-                            .repeatSecondlyForever(jobInfo.getRepeatIntervalInSeconds())
-                            .withRepeatCount(jobInfo.getRepeatCount())
+                            .repeatSecondlyForever(jobInfoDto.getRepeatIntervalInSeconds())
+                            .withRepeatCount(jobInfoDto.getRepeatCount())
                             // .withMisfireHandlingInstructionNextWithExistingCount()
                             )
                     .build();
         }
     }
 
-    public JobStatus getJobStatus(JobKey jobKey) {
+    public JobStatusDto getJobStatus(JobKey jobKey) {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
 
         try {
             JobDetail jobDetail;
-            JobInfo jobInfo;
-            JobStatus jobStatus;
+            JobInfoDto jobInfoDto;
+            JobStatusDto jobStatusDto;
 
             jobDetail = scheduler.getJobDetail(jobKey);
 
-            jobInfo = JobInfo.builder()
+            jobInfoDto = JobInfoDto.builder()
                                     .group(jobDetail.getKey().getGroup())
                                     .name(jobDetail.getKey().getName())
                                     .description(jobDetail.getDescription())
@@ -210,46 +210,46 @@ public class SchedulerService {
             Trigger trigger = scheduler.getTrigger(triggerKey);
 
             if(trigger != null) {
-                jobInfo.setStartTime(DateTimeUtil.toLocalDateTime(trigger.getStartTime()));
-                jobInfo.setEndTime(DateTimeUtil.toLocalDateTime(trigger.getEndTime()));
+                jobInfoDto.setStartTime(DateTimeUtil.toLocalDateTime(trigger.getStartTime()));
+                jobInfoDto.setEndTime(DateTimeUtil.toLocalDateTime(trigger.getEndTime()));
 
                 if(trigger instanceof CronTrigger) {
                     CronTrigger ct = (CronTrigger)trigger;
-                    jobInfo.setCronExpression(ct.getCronExpression());
+                    jobInfoDto.setCronExpression(ct.getCronExpression());
                 }
                 if(trigger instanceof SimpleTrigger) {
                     SimpleTrigger st = (SimpleTrigger)trigger;
-                    jobInfo.setRepeatIntervalInSeconds((int)(st.getRepeatInterval()/1000));
-                    jobInfo.setRepeatCount(st.getRepeatCount());
+                    jobInfoDto.setRepeatIntervalInSeconds((int)(st.getRepeatInterval()/1000));
+                    jobInfoDto.setRepeatCount(st.getRepeatCount());
                 }
 
-                jobStatus = JobStatus.builder()
-                            .jobInfo(jobInfo)
+                jobStatusDto = JobStatusDto.builder()
+                            .jobInfoDto(jobInfoDto)
                             .lastFiredTime(DateTimeUtil.toLocalDateTime(trigger.getPreviousFireTime()))
                             .nextFireTime(DateTimeUtil.toLocalDateTime(trigger.getNextFireTime()))
                             .jobState(scheduler.getTriggerState(trigger.getKey()).name())
                             .build();
                 if(isJobRunning(trigger.getJobKey())) {
-                    jobStatus.setJobState("RUNNING");
+                    jobStatusDto.setJobState("RUNNING");
                 }
             }
             else {
-                jobStatus = JobStatus.builder()
-                            .jobInfo(jobInfo)
+                jobStatusDto = JobStatusDto.builder()
+                            .jobInfoDto(jobInfoDto)
                             .jobState(scheduler.getTriggerState(triggerKey).name())
                             .build();
             }
-            return jobStatus;
+            return jobStatusDto;
         } catch (SchedulerException e) {
             log.error("[schedulerdebug] error while fetching job info", e);
             throw new ApiException(ErrorCode.JOB_SCHEDULER_EXCEPTION, e);
         }
     }
 
-    public JobList getJobList(String jobGroup) {
-        JobStatus jobStatus;
+    public JobListDto getJobList(String jobGroup) {
+        JobStatusDto jobStatusDto;
 
-        List<JobStatus> jobs = new ArrayList<>();
+        List<JobStatusDto> jobs = new ArrayList<>();
 
         int numOfRunningJobs = 0;
         int numOfGroups = 0;
@@ -267,9 +267,9 @@ public class SchedulerService {
                 for(JobKey jobKey : scheduler.getJobKeys(GroupMatcher.jobGroupEquals(groupName))) {
                     numOfAllJobs++;
 
-                    jobStatus = getJobStatus(jobKey);
+                    jobStatusDto = getJobStatus(jobKey);
                     
-                    jobs.add(jobStatus);  
+                    jobs.add(jobStatusDto);  
                 }
             }
         } catch (SchedulerException e) {
@@ -277,7 +277,7 @@ public class SchedulerService {
             throw new ApiException(ErrorCode.JOB_SCHEDULER_EXCEPTION, e);
         }
 
-        return JobList.builder()
+        return JobListDto.builder()
                 .numOfAllJobs(numOfAllJobs)
                 .numOfGroups(numOfGroups)
                 .numOfRunningJobs(numOfRunningJobs)
@@ -285,7 +285,7 @@ public class SchedulerService {
                 .build();
     }
 
-    public JobStatus pauseJob(JobKey jobKey) {
+    public JobStatusDto pauseJob(JobKey jobKey) {
         try {
             schedulerFactoryBean.getScheduler().pauseJob(jobKey);
         } catch (SchedulerException e) {
@@ -296,7 +296,7 @@ public class SchedulerService {
         return getJobStatus(jobKey);
     }
 
-    public JobStatus resumeJob(JobKey jobKey) {
+    public JobStatusDto resumeJob(JobKey jobKey) {
         try {
             schedulerFactoryBean.getScheduler().resumeJob(jobKey);
         } catch (SchedulerException e) {
@@ -307,7 +307,7 @@ public class SchedulerService {
         return getJobStatus(jobKey);
     }
 
-    public JobStatus interruptJob(JobKey jobKey) {
+    public JobStatusDto interruptJob(JobKey jobKey) {
         try {
             schedulerFactoryBean.getScheduler().interrupt(jobKey);
         } catch (UnableToInterruptJobException e) {

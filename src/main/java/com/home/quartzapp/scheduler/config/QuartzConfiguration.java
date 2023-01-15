@@ -51,12 +51,12 @@ public class QuartzConfiguration {
     }
 
     @Bean
-	public SchedulerFactoryBean schedulerFactoryBean(ApplicationContext applicationContext) {
+    SchedulerFactoryBean schedulerFactoryBean(ApplicationContext applicationContext) {
         AutowireCapableBeanJobFactory jobFactory = new AutowireCapableBeanJobFactory();
         Properties properties = new Properties();
         SchedulerFactoryBean schedulerFactoryBean = new SchedulerFactoryBean();
 
-		properties.putAll(quartzProperties.getProperties());
+        properties.putAll(quartzProperties.getProperties());
 
         jobFactory.setApplicationContext(applicationContext);
 
@@ -65,11 +65,11 @@ public class QuartzConfiguration {
         schedulerFactoryBean.setOverwriteExistingJobs(true);
         schedulerFactoryBean.setWaitForJobsToCompleteOnShutdown(true);
         schedulerFactoryBean.setApplicationContext(applicationContext);
-		schedulerFactoryBean.setDataSource(dataSource);
+        schedulerFactoryBean.setDataSource(dataSource);
         schedulerFactoryBean.setJobFactory(jobFactory);
-		schedulerFactoryBean.setQuartzProperties(properties);
+        schedulerFactoryBean.setQuartzProperties(properties);
         schedulerFactoryBean.setAutoStartup(false);
-        
+
         return schedulerFactoryBean;
     }
 }

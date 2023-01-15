@@ -8,7 +8,6 @@ import lombok.Setter;
 import lombok.ToString;
 
 import org.quartz.JobDataMap;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -21,7 +20,7 @@ import javax.validation.constraints.NotBlank;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class JobInfo {
+public class JobInfoDto {
     // JobDetail
     @NotBlank(message = "Group name cannot be empty...")
     private String group;
@@ -32,9 +31,7 @@ public class JobInfo {
     private JobDataMap jobDataMap;
 
     // Trigger
-    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime startTime;
-    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime endTime;
 
     // SimpleTrigger

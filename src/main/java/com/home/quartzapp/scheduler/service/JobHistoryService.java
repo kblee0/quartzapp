@@ -12,8 +12,8 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.home.quartzapp.scheduler.dao.JobHistoryDAO;
-import com.home.quartzapp.scheduler.entity.JobHistory;
+import com.home.quartzapp.scheduler.dto.JobHistoryDto;
+import com.home.quartzapp.scheduler.mapper.JobHistoryMapper;
 import com.home.quartzapp.scheduler.model.JobStatus;
 
 import lombok.extern.slf4j.Slf4j;
@@ -22,18 +22,18 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class JobHistoryService {
     @Autowired
-    private JobHistoryDAO jobHistoryDAO;
+    private JobHistoryMapper jobHistoryMapper;
 
     public void insertJobHistory(JobExecutionContext context) {
-        JobHistory jobHistory = createJobHistory(context, JobStatus.STARTED);
+        JobHistoryDto jobHistoryDto = createJobHistory(context, JobStatus.STARTED);
 
-        jobHistoryDAO.insertJobHistory(jobHistory);
+        jobHistoryMapper.insertJobHistory(jobHistoryDto);
     }
 
     public void updateJobHistory(JobExecutionContext context, JobExecutionException jobException) {
-        JobHistory jobHistory = createJobHistory(context, JobStatus.COMPLETED);
+        JobHistoryDto jobHistoryDto = createJobHistory(context, JobStatus.COMPLETED);
 
-        jobHistory.setEndTime(new Date());
+        jobHistoryDto.setEndTime(new Date());
 
         if(jobException != null) {
             StringWriter stringWriter = new StringWriter();
@@ -41,27 +41,27 @@ public class JobHistoryService {
 
             jobException.printStackTrace(printWriter);
 
-            jobHistory.setStatus(JobStatus.FAILED.name());
-            jobHistory.setExitMessage(stringWriter.toString());
+            jobHistoryDto.setStatus(JobStatus.FAILED.name());
+            jobHistoryDto.setExitMessage(stringWriter.toString());
         }
 
-        jobHistoryDAO.updateJobHistory(jobHistory);
+        jobHistoryMapper.updateJobHistory(jobHistoryDto);
     }
 
-    private JobHistory createJobHistory(JobExecutionContext context, JobStatus jobStatus) {
-        JobHistory jobHistory = new JobHistory();
+    private JobHistoryDto createJobHistory(JobExecutionContext context, JobStatus jobStatus) {
+        JobHistoryDto jobHistoryDto = new JobHistoryDto();
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-            jobHistory.setSchedName(context.getScheduler().getSchedulerName());
-            jobHistory.setEntryId(context.getFireInstanceId());
-            jobHistory.setTriggerName(context.getTrigger().getKey().getName());
-            jobHistory.setTriggerGroup(context.getTrigger().getKey().getGroup());
-            jobHistory.setJobName(context.getJobDetail().getKey().getName());
-            jobHistory.setJobGroup(context.getJobDetail().getKey().getGroup());
-            jobHistory.setStartTime(context.getFireTime());
-            jobHistory.setStatus(jobStatus.name());
-            jobHistory.setJobData(mapper.writeValueAsString(context.getJobDetail().getJobDataMap()));
+            jobHistoryDto.setSchedName(context.getScheduler().getSchedulerName());
+            jobHistoryDto.setEntryId(context.getFireInstanceId());
+            jobHistoryDto.setTriggerName(context.getTrigger().getKey().getName());
+            jobHistoryDto.setTriggerGroup(context.getTrigger().getKey().getGroup());
+            jobHistoryDto.setJobName(context.getJobDetail().getKey().getName());
+            jobHistoryDto.setJobGroup(context.getJobDetail().getKey().getGroup());
+            jobHistoryDto.setStartTime(context.getFireTime());
+            jobHistoryDto.setStatus(jobStatus.name());
+            jobHistoryDto.setJobData(mapper.writeValueAsString(context.getJobDetail().getJobDataMap()));
         } catch (SchedulerException e) {
             log.error("createJobHistory :: {}", e);
             return null;
@@ -71,6 +71,6 @@ public class JobHistoryService {
                 e);
         }
 
-        return jobHistory;
+        return jobHistoryDto;
     }
 }

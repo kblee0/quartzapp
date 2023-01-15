@@ -18,7 +18,7 @@ import lombok.ToString;
 @Setter
 @ToString
 @JsonInclude(Include.NON_NULL)
-public class ApiError {
+public class ApiErrorDto {
     private String errorCode;
     private String errorMessage;
     private String cause;
@@ -27,39 +27,39 @@ public class ApiError {
     @JsonIgnore
     private HttpStatus status;
 
-    public ApiError(ErrorCode errorCode) {
+    public ApiErrorDto(ErrorCode errorCode) {
         this.errorCode = errorCode.getErrorCode();
         this.errorMessage = errorCode.getErrorMessage();
         this.status = errorCode.getStatus();
     }
 
-    public ApiError(ErrorCode errorCode, Throwable cause) {
+    public ApiErrorDto(ErrorCode errorCode, Throwable cause) {
         this.errorCode = errorCode.getErrorCode();
         this.errorMessage = errorCode.getErrorMessage();
         this.cause = cause.getMessage();
         this.status = errorCode.getStatus();
     }
 
-    public ApiError(ErrorCode errorCode, String cause) {
+    public ApiErrorDto(ErrorCode errorCode, String cause) {
         this.errorCode = errorCode.getErrorCode();
         this.errorMessage = errorCode.getErrorMessage();
         this.cause = cause;
         this.status = errorCode.getStatus();
     }
 
-    public static ResponseEntity<?> create(ApiError apiError) {
-        return new ResponseEntity<>(apiError, apiError.getStatus());
+    public static ResponseEntity<?> create(ApiErrorDto apiErrorDto) {
+        return new ResponseEntity<>(apiErrorDto, apiErrorDto.getStatus());
     }
 
     public static ResponseEntity<?> create(ErrorCode error) {
-        ApiError apiError = new ApiError(error);
+        ApiErrorDto apiErrorDto = new ApiErrorDto(error);
 
-        return new ResponseEntity<>(apiError, error.getStatus());
+        return new ResponseEntity<>(apiErrorDto, error.getStatus());
     }
 
     public static ResponseEntity<?> create(ErrorCode error, String cause) {
-        ApiError apiError = new ApiError(error, cause);
+        ApiErrorDto apiErrorDto = new ApiErrorDto(error, cause);
         
-        return new ResponseEntity<>(apiError, error.getStatus());
+        return new ResponseEntity<>(apiErrorDto, error.getStatus());
     }
 }

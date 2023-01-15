@@ -1,4 +1,4 @@
-package com.home.quartzapp.scheduler.entity;
+package com.home.quartzapp.scheduler.dto;
 
 import java.util.Date;
 
@@ -9,7 +9,7 @@ import lombok.Setter;
 @Data
 @Getter
 @Setter
-public class JobHistory {
+public class JobHistoryDto {
     String schedName;
     String entryId;
     String triggerName;

@@ -11,9 +11,9 @@ import java.util.List;
 @Setter
 @ToString
 @Builder
-public class JobList {
+public class JobListDto {
 	private int numOfAllJobs;
 	private int numOfGroups;
 	private int numOfRunningJobs;
-	private List<JobStatus> jobs;
+	private List<JobStatusDto> jobs;
 }

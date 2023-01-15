@@ -13,7 +13,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.home.quartzapp.scheduler.dto.ApiError;
+import com.home.quartzapp.scheduler.dto.ApiErrorDto;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,7 +25,7 @@ public class ControllerExceptionHandler {
     protected ResponseEntity<?> handleApiException(ApiException e) {
         log.error("handleApiException", e);
 
-        return ApiError.create(e.getError());
+        return ApiErrorDto.create(e.getError());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -38,10 +38,10 @@ public class ControllerExceptionHandler {
                     fieldError.getObjectName(),
                     fieldError.getField(),
                     fieldError.getDefaultMessage());
-            return ApiError.create(ErrorCode.API_REQUEST_NOT_VALID, cause);
+            return ApiErrorDto.create(ErrorCode.API_REQUEST_NOT_VALID, cause);
         }
         else {
-            return ApiError.create(ErrorCode.API_REQUEST_NOT_VALID);
+            return ApiErrorDto.create(ErrorCode.API_REQUEST_NOT_VALID);
         }
     }
 
@@ -49,21 +49,21 @@ public class ControllerExceptionHandler {
     protected ResponseEntity<?> handleConstraintViolationException(ConstraintViolationException e) {
         log.error("handleConstraintViolationException", e);
 
-        return ApiError.create(ErrorCode.API_REQUEST_NOT_VALID, e.getMessage());
+        return ApiErrorDto.create(ErrorCode.API_REQUEST_NOT_VALID, e.getMessage());
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     protected ResponseEntity<?> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
         log.error("handleHttpRequestMethodNotSupportedException", e);
 
-        return ApiError.create(ErrorCode.HTTP_METHOD_NOT_ALLOWED);
+        return ApiErrorDto.create(ErrorCode.HTTP_METHOD_NOT_ALLOWED);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     protected ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException e) {
         log.error("handleIllegalArgumentException", e);
 
-        return ApiError.create(ErrorCode.HTTP_INVALID_PARAM, e.getMessage());
+        return ApiErrorDto.create(ErrorCode.HTTP_INVALID_PARAM, e.getMessage());
     }
 
     //@Valid 검증 실패 시 Catch
@@ -71,14 +71,14 @@ public class ControllerExceptionHandler {
     protected ResponseEntity<?> handleInvalidParameterException(InvalidParameterException e) {
         log.error("handleInvalidParameterException", e);
 
-        return ApiError.create(ErrorCode.HTTP_INVALID_PARAM, e.getMessage());
+        return ApiErrorDto.create(ErrorCode.HTTP_INVALID_PARAM, e.getMessage());
     }
 
     @ExceptionHandler(SchedulerException.class)
     protected ResponseEntity<?> handleSchedulerException(SchedulerException e) {
         log.error("handleSchedulerException", e);
 
-        return ApiError.create(ErrorCode.HTTP_INVALID_PARAM, e.getMessage());
+        return ApiErrorDto.create(ErrorCode.HTTP_INVALID_PARAM, e.getMessage());
     }
 
 
@@ -87,6 +87,6 @@ public class ControllerExceptionHandler {
     protected ResponseEntity<?> handleException(Exception e) {
         log.error("handleException", e);
 
-        return ApiError.create(ErrorCode.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
+        return ApiErrorDto.create(ErrorCode.HTTP_INTERNAL_SERVER_ERROR, e.getMessage());
     }
 }
