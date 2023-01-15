@@ -18,12 +18,19 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        AccountDto accountDto = null;
+
         if(!StringUtils.hasText(username)) {
             throw new AuthenticationServiceException(username + " not found.");
         }
 
+        // accountDto = selectUserDetails(username);
+        // if(accountDto == null) {
+        //     throw new UsernameNotFoundException(username)
+        // }
+
         // sample account dto
-        AccountDto accountDto = new AccountDto();
+        accountDto = new AccountDto();
 
         accountDto.setAccountId("101");
         accountDto.setUsername(username);
