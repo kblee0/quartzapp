@@ -15,11 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class HttpUtil {
+public class HttpUtils {
     private static ObjectMapper objectMapper;
 
-    public HttpUtil(ObjectMapper objectMapper) {
-        HttpUtil.objectMapper = objectMapper;
+    public HttpUtils(ObjectMapper objectMapper) {
+        HttpUtils.objectMapper = objectMapper;
     }
     public static void sendApiError(HttpServletResponse response, ApiErrorDto apiErrorDto) {
         PrintWriter writer = null;

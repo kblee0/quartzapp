@@ -9,7 +9,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
-import com.home.quartzapp.common.util.HttpUtil;
+import com.home.quartzapp.common.util.HttpUtils;
 import com.home.quartzapp.scheduler.dto.ApiErrorDto;
 import com.home.quartzapp.scheduler.exception.ErrorCode;
 
@@ -23,10 +23,10 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         Exception e = (Exception)request.getAttribute("exception");
 
         if(e != null) {
-            HttpUtil.sendApiError(response, new ApiErrorDto(ErrorCode.HTTP_UNAUTHORIZED, e.getMessage()));
+            HttpUtils.sendApiError(response, new ApiErrorDto(ErrorCode.HTTP_UNAUTHORIZED, e.getMessage()));
         }
         else {
-            HttpUtil.sendApiError(response, new ApiErrorDto(ErrorCode.HTTP_UNAUTHORIZED));
+            HttpUtils.sendApiError(response, new ApiErrorDto(ErrorCode.HTTP_UNAUTHORIZED));
         }
     }
 }
