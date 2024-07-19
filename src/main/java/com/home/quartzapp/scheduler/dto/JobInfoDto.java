@@ -12,7 +12,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 @Getter
 @Setter

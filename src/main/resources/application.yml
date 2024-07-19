@@ -1,15 +1,3 @@
-spring:
-  profiles:
-    group:
-      default:
-      - common
-      - commondb
-      test:
-      - common
-      - testdb
-
----
-
 server:
   port: 8080
   compression:
@@ -18,9 +6,22 @@ server:
 spring:
   config:
     activate:
-      on-profile: common
+      on-profile: dev
   application:
     name: quartzManager
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/databasename
+    password: user
+    username: password
+    hikari:
+      maximum-pool-size: 3
+      connection-timeout: 5000
+      connection-init-sql: SELECT 1
+      validation-timeout: 2000
+      minimum-idle: 10
+      idle-timeout: 600000
+      max-lifetime: 1800000
   quartz:
     job-store-type: jdbc
     jdbc:
@@ -43,69 +44,6 @@ spring:
             isClustered: false
             clusterCheckinInterval: 20000
             dataSource: myDS
-mybatis:
-  mapper-locations:
-  - classpath:mapper/**/**/**.xml
-  type-aliases-package: com.home.quartzapp.scheduler.dto
-  configuration:
-    map-underscore-to-camel-case: true
-    default-fetch-size: 500
-
-jwt:
-  header: Authorization
-  secret: PbiQO0ltYWXbbUe48qo3L4DR1u2KeC4+DOQfiKyOEOU=
-  token-expires-in-seconds: 180
-
----
-
-spring:
-  config:
-    activate:
-      on-profile: commondb
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    # https://www.devglan.com/online-tools/jasypt-online-encryption-decryption
-    # Password: System.getenv("JASYPT_PASSWD")
-    url: ENC(P1mUsyLqf3knuUcUmdwqfIvePtNRVbfQ1+mWrKDP4llgjOX/a4/lyDwB8OAtK9QP)
-    password: ENC(nakhqJb9GyYZpIgFUW37/Q==)
-    username: ENC(hWgPVHRFzZT9ox2650Gbsg==)
-    hikari:
-      maximum-pool-size: 3
-      connection-timeout: 5000
-      connection-init-sql: SELECT 1
-      validation-timeout: 2000
-      minimum-idle: 10
-      idle-timeout: 600000
-      max-lifetime: 1800000
-  quartz:
-    properties:
-      org:
-        quartz:
-          dataSource:
-            myDS:
-              provider: hikaricp
-              driver: com.mysql.cj.jdbc.Driver
-              URL: ENC(P1mUsyLqf3knuUcUmdwqfIvePtNRVbfQ1+mWrKDP4llgjOX/a4/lyDwB8OAtK9QP)
-              password: ENC(nakhqJb9GyYZpIgFUW37/Q==)
-              username: ENC(hWgPVHRFzZT9ox2650Gbsg==)
-              maxConnections: 5
-              validationQuery: select 0 from dual
-
----
-
-spring:
-  config:
-    activate:
-      on-profile: testdb
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/databasename
-    password: user
-    username: password
-  quartz:
-    properties:
-      org:
-        quartz:
           dataSource:
             myDS:
               provider: hikaricp
@@ -115,3 +53,15 @@ spring:
               username: password
               maxConnections: 5
               validationQuery: select 0 from dual
+mybatis:
+  mapper-locations:
+    - classpath:mapper/**/**/**.xml
+  type-aliases-package: com.home.quartzapp.scheduler.dto
+  configuration:
+    map-underscore-to-camel-case: true
+    default-fetch-size: 500
+
+jwt:
+  header: Authorization
+  secret: PbiQO0ltYWXbbUe48qo3L4DR1u2KeC4+DOQfiKyOEOU=
+  token-expires-in-seconds: 180

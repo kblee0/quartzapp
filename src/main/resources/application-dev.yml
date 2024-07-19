@@ -1,0 +1,22 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/databasename
+    password: user
+    username: password
+  quartz:
+    properties:
+      org:
+        quartz:
+          dataSource:
+            myDS:
+              provider: hikaricp
+              driver: com.mysql.cj.jdbc.Driver
+              URL: jdbc:mysql://localhost:3306/databasename
+              password: user
+              username: password
+              maxConnections: 5
+              validationQuery: select 0 from dual

@@ -1,7 +1,7 @@
 package com.home.quartzapp.scheduler.controller;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 
 import org.quartz.JobKey;
 import org.springframework.beans.factory.annotation.Autowired;

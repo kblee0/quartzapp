@@ -3,7 +3,7 @@ package com.home.quartzapp.scheduler.exception;
 import java.security.InvalidParameterException;
 import java.text.MessageFormat;
 
-import javax.validation.ConstraintViolationException;
+import jakarta.validation.ConstraintViolationException;
 
 import org.quartz.SchedulerException;
 import org.springframework.http.ResponseEntity;
