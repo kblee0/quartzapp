@@ -1,0 +1,26 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+  h2:
+    console:
+      enabled: true  # H2 Console을 사용할지 여부 (H2 Console은 H2 Database를 UI로 제공해주는 기능)
+      path: /h2-console  # H2 Console의 Path
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:./quartzapp-h2;DATABASE_TO_UPPER=FALSE;MODE=MYSQL
+    username: sa
+    password:
+  quartz:
+    properties:
+      org:
+        quartz:
+          dataSource:
+            myDS:
+              provider: hikaricp
+              driver: org.h2.Driver
+              URL: jdbc:h2:./quartzapp-h2;DATABASE_TO_UPPER=FALSE;MODE=MYSQL
+              username: sa
+              password:
+              maxConnections: 5
+              validationQuery: select 0

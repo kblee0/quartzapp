@@ -4,16 +4,15 @@ server:
     enabled: true
 
 spring:
-  config:
-    activate:
-      on-profile: dev
+  profiles:
+    default: dev
   application:
     name: quartzManager
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/databasename
-    password: user
-    username: password
+    username: user
+    password: password
     hikari:
       maximum-pool-size: 3
       connection-timeout: 5000
@@ -49,8 +48,8 @@ spring:
               provider: hikaricp
               driver: com.mysql.cj.jdbc.Driver
               URL: jdbc:mysql://localhost:3306/databasename
-              password: user
-              username: password
+              username: user
+              password: password
               maxConnections: 5
               validationQuery: select 0 from dual
 mybatis:

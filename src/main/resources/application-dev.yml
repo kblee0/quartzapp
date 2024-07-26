@@ -4,9 +4,9 @@ spring:
       on-profile: dev
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/databasename
-    password: user
-    username: password
+    url: jdbc:mysql://192.168.4.12:3306/ops
+    username: ops
+    password: jkl123#
   quartz:
     properties:
       org:
@@ -15,8 +15,8 @@ spring:
             myDS:
               provider: hikaricp
               driver: com.mysql.cj.jdbc.Driver
-              URL: jdbc:mysql://localhost:3306/databasename
-              password: user
-              username: password
+              URL: jdbc:mysql://192.168.4.12:3306/ops
+              username: ops
+              password: jkl123#
               maxConnections: 5
               validationQuery: select 0 from dual

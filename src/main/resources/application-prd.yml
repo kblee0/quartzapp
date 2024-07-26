@@ -7,8 +7,8 @@ spring:
     # https://www.devglan.com/online-tools/jasypt-online-encryption-decryption
     # Password: System.getenv("JASYPT_PASSWD")
     url: ENC(P1mUsyLqf3knuUcUmdwqfIvePtNRVbfQ1+mWrKDP4llgjOX/a4/lyDwB8OAtK9QP)
-    password: ENC(nakhqJb9GyYZpIgFUW37/Q==)
     username: ENC(hWgPVHRFzZT9ox2650Gbsg==)
+    password: ENC(nakhqJb9GyYZpIgFUW37/Q==)
     hikari:
       maximum-pool-size: 3
       connection-timeout: 5000
@@ -34,8 +34,8 @@ spring:
               provider: hikaricp
               driver: com.mysql.cj.jdbc.Driver
               URL: ENC(P1mUsyLqf3knuUcUmdwqfIvePtNRVbfQ1+mWrKDP4llgjOX/a4/lyDwB8OAtK9QP)
-              password: ENC(nakhqJb9GyYZpIgFUW37/Q==)
               username: ENC(hWgPVHRFzZT9ox2650Gbsg==)
+              password: ENC(nakhqJb9GyYZpIgFUW37/Q==)
               maxConnections: 5
               validationQuery: select 0 from dual
 jwt:

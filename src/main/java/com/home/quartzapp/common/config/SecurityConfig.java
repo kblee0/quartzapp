@@ -13,16 +13,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-import com.home.quartzapp.common.config.jwt.JwtAccessDeniedHandler;
-import com.home.quartzapp.common.config.jwt.JwtAuthenticationEntryPoint;
-import com.home.quartzapp.common.config.jwt.JwtProvider;
-import com.home.quartzapp.common.config.jwt.JwtSecurityConfigurerAdapter;
-
 import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -59,6 +53,7 @@ public class SecurityConfig {
                         .requestMatchers("/favicon.ico").permitAll()
                         .requestMatchers("/v1/users/login").permitAll()     // login api
                         .requestMatchers("/join").permitAll()
+                        .requestMatchers("/h2-console").permitAll()
                         .requestMatchers("/scheduler/**").hasRole("ADMIN")  // ROLE_ADMIN
                         .anyRequest().authenticated())
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))     // not use session
