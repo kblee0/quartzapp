@@ -52,15 +52,18 @@ spring:
               password: password
               maxConnections: 5
               validationQuery: select 0 from dual
+logging:
+  level:
+    com.home.quartzapp.scheduler.repository: DEBUG
+
 mybatis:
-  mapper-locations:
-    - classpath:mapper/**/**/**.xml
-  type-aliases-package: com.home.quartzapp.scheduler.dto
+  mapper-locations: classpath:**/*.xml
   configuration:
     map-underscore-to-camel-case: true
     default-fetch-size: 500
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 jwt:
   header: Authorization
   secret: PbiQO0ltYWXbbUe48qo3L4DR1u2KeC4+DOQfiKyOEOU=
-  token-expires-in-seconds: 180
+  expiration-time-seconds: 180

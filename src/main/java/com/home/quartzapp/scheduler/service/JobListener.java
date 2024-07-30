@@ -1,5 +1,6 @@
 package com.home.quartzapp.scheduler.service;
 
+import lombok.RequiredArgsConstructor;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,9 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class JobListener implements org.quartz.JobListener {
-    @Autowired
-    JobHistoryService jobHistoryService;
+    private final JobHistoryService jobHistoryService;
 
     @Override
     public String getName() {

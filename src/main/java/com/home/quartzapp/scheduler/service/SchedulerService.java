@@ -1,28 +1,12 @@
 package com.home.quartzapp.scheduler.service;
 
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
-import org.quartz.CronScheduleBuilder;
-import org.quartz.CronTrigger;
-import org.quartz.Job;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobKey;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.SimpleScheduleBuilder;
-import org.quartz.SimpleTrigger;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
-import org.quartz.TriggerKey;
-import org.quartz.UnableToInterruptJobException;
+import com.home.quartzapp.common.exception.ApiException;
+import lombok.RequiredArgsConstructor;
+import org.quartz.*;
 import org.quartz.impl.matchers.GroupMatcher;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -30,8 +14,6 @@ import org.springframework.util.StringUtils;
 import com.home.quartzapp.scheduler.dto.JobInfoDto;
 import com.home.quartzapp.scheduler.dto.JobListDto;
 import com.home.quartzapp.scheduler.dto.JobStatusDto;
-import com.home.quartzapp.scheduler.exception.ApiException;
-import com.home.quartzapp.scheduler.exception.ErrorCode;
 import com.home.quartzapp.scheduler.util.DateTimeUtil;
 
 import lombok.extern.slf4j.Slf4j;
@@ -40,12 +22,9 @@ import static org.quartz.CronExpression.isValidExpression;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class SchedulerService {
-    @Autowired
-    private SchedulerFactoryBean schedulerFactoryBean;
-
-    // @Autowired
-    // private ApplicationContext context;
+    private final SchedulerFactoryBean schedulerFactoryBean;
 
     public JobStatusDto addJob(JobInfoDto jobInfoDto) {
         JobDetail jobDetail;
@@ -62,7 +41,7 @@ public class SchedulerService {
             return getJobStatus(trigger.getJobKey());
         } catch (SchedulerException e) {
             log.error("error occurred while scheduling with jobInfoDto : {}", jobInfoDto, e);
-            throw new ApiException(ErrorCode.JOB_SCHEDULER_EXCEPTION, e);
+            throw ApiException.code("SCHE0004");
         }
     }
 
@@ -78,7 +57,7 @@ public class SchedulerService {
         try {
             JobDetail jobDetail = createJobDetail(jobInfoDto);
 
-            // relpace job detail
+            // replace job detail
             scheduler.addJob(jobDetail, true);
 
             if(scheduler.getTrigger(newTrigger.getKey()) != null) {
@@ -89,7 +68,7 @@ public class SchedulerService {
             }
         } catch (SchedulerException e) {
             log.error("error occurred while scheduling with jobInfoDto : {}", jobInfoDto, e);
-            throw new ApiException(ErrorCode.JOB_SCHEDULER_EXCEPTION, e);
+            throw ApiException.code("SCHE0004");
         }
         log.debug("Job with jobInfoDto : {} rescheduled successfully at date : {}", jobInfoDto, dt);
 
@@ -101,18 +80,21 @@ public class SchedulerService {
         JobKey jobKey = new JobKey(jobInfoDto.getName(), jobInfoDto.getGroup());
         log.debug("[schedulerdebug] deleting job with jobKey : {}", jobKey);
         try {
-            boolean rv = schedulerFactoryBean.getScheduler().deleteJob(jobKey);
-            return rv;
+            return schedulerFactoryBean.getScheduler().deleteJob(jobKey);
         } catch (SchedulerException e) {
             log.error("[schedulerdebug] error occurred while deleting job with jobKey : {}", jobKey, e);
-            throw new ApiException(ErrorCode.JOB_SCHEDULER_EXCEPTION, e);
+            throw ApiException.code("SCHE0004");
         }
     }
 
     /* Private Methods */
     private JobDetail createJobDetail(JobInfoDto jobInfoDto) {
         JobKey jobKey = new JobKey(jobInfoDto.getName(), jobInfoDto.getGroup());
-        
+
+        if(jobInfoDto.getJobDataMap() == null) {
+            jobInfoDto.setJobDataMap(new JobDataMap());
+            jobInfoDto.getJobDataMap().put("jobName", jobKey.getName());
+        }
         try {
             return JobBuilder.newJob()
                     .ofType(Class.forName(jobInfoDto.getJobClassName()).asSubclass(Job.class))
@@ -122,7 +104,7 @@ public class SchedulerService {
                     .setJobData(jobInfoDto.getJobDataMap())
                     .build();
         } catch (ClassNotFoundException e) {
-            throw new ApiException(ErrorCode.JOB_CLASS_NOT_FOUND, e);
+            throw ApiException.code("SCHE0003");
         }
     }
 
@@ -242,7 +224,7 @@ public class SchedulerService {
             return jobStatusDto;
         } catch (SchedulerException e) {
             log.error("[schedulerdebug] error while fetching job info", e);
-            throw new ApiException(ErrorCode.JOB_SCHEDULER_EXCEPTION, e);
+            throw ApiException.code("SCHE0004");
         }
     }
 
@@ -274,7 +256,7 @@ public class SchedulerService {
             }
         } catch (SchedulerException e) {
             log.error("[schedulerdebug] error while fetching all job info", e);
-            throw new ApiException(ErrorCode.JOB_SCHEDULER_EXCEPTION, e);
+            throw ApiException.code("SCHE0004");
         }
 
         return JobListDto.builder()
@@ -290,7 +272,7 @@ public class SchedulerService {
             schedulerFactoryBean.getScheduler().pauseJob(jobKey);
         } catch (SchedulerException e) {
             log.error("error occurred while pause job with jobKey : {}", jobKey, e);
-            throw new ApiException(ErrorCode.JOB_SCHEDULER_EXCEPTION, e);
+            throw ApiException.code("SCHE0004");
         }
 
         return getJobStatus(jobKey);
@@ -301,7 +283,7 @@ public class SchedulerService {
             schedulerFactoryBean.getScheduler().resumeJob(jobKey);
         } catch (SchedulerException e) {
             log.error("error occurred while resume job with jobKey : {}", jobKey, e);
-            throw new ApiException(ErrorCode.JOB_SCHEDULER_EXCEPTION, e);
+            throw ApiException.code("SCHE0004");
         }
 
         return getJobStatus(jobKey);
@@ -312,7 +294,7 @@ public class SchedulerService {
             schedulerFactoryBean.getScheduler().interrupt(jobKey);
         } catch (UnableToInterruptJobException e) {
             log.error("error occurred while interrupt job with jobKey : {}", jobKey, e);
-            throw new ApiException(ErrorCode.JOB_SCHEDULER_EXCEPTION, e);
+            throw ApiException.code("SCHE0004");
         }
         return getJobStatus(jobKey);
     }

@@ -1,7 +1,7 @@
 package com.home.quartzapp;
 
+import lombok.RequiredArgsConstructor;
 import org.quartz.SchedulerException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -12,10 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @SpringBootApplication
+@RequiredArgsConstructor
 public class QuartzApplication {
-
-	@Autowired
-    private SchedulerFactoryBean schedulerFactoryBean;
+    private final SchedulerFactoryBean schedulerFactoryBean;
 	
 	public static void main(String[] args) {
 		SpringApplication.run(QuartzApplication.class, args);

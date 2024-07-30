@@ -1,17 +1,7 @@
 package com.home.quartzapp.common.config.security;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.jupiter.api.Test;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.TestPropertySource;
-
-import com.home.quartzapp.common.config.jwt.JwtProvider;
-import com.home.quartzapp.users.dto.AccountDto;
 
 @TestPropertySource(properties = {
     "jwt.secret-key=aG91Mjctc2ltcGxlLXNwcmluZy1ib290LWFwaS1qd3QK",

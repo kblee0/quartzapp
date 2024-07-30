@@ -5,6 +5,7 @@ import java.util.Properties;
 
 import javax.sql.DataSource;
 
+import lombok.RequiredArgsConstructor;
 import org.quartz.spi.TriggerFiredBundle;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,17 +21,12 @@ import com.home.quartzapp.scheduler.service.JobListener;
 import com.home.quartzapp.scheduler.service.TriggerListener;
 
 @Configuration
+@RequiredArgsConstructor
 public class QuartzConfiguration {
-    @Autowired
-    private TriggerListener triggerListener;
-
-    @Autowired
-    private JobListener jobListener;
-    @Autowired
-	private QuartzProperties quartzProperties;
-
-    @Autowired
-	private DataSource dataSource;
+    private final TriggerListener triggerListener;
+    private final JobListener jobListener;
+	private final QuartzProperties quartzProperties;
+	private final DataSource dataSource;
     
     public class AutowireCapableBeanJobFactory extends SpringBeanJobFactory {
 

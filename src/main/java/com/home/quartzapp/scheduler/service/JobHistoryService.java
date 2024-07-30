@@ -4,30 +4,37 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Date;
 
+import com.home.quartzapp.scheduler.entity.JobHistory;
+import org.modelmapper.ModelMapper;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.SchedulerException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.home.quartzapp.scheduler.dto.JobHistoryDto;
-import com.home.quartzapp.scheduler.mapper.JobHistoryMapper;
+import com.home.quartzapp.scheduler.repository.JobHistoryRepository;
 import com.home.quartzapp.scheduler.model.JobStatus;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
 public class JobHistoryService {
-    @Autowired
-    private JobHistoryMapper jobHistoryMapper;
+    private final JobHistoryRepository jobHistoryRepository;
+    private final ModelMapper modelMapper;
+
+    public JobHistoryService(JobHistoryRepository jobHistoryRepository, ModelMapper modelMapper) {
+        this.jobHistoryRepository = jobHistoryRepository;
+        this.modelMapper = modelMapper;
+    }
 
     public void insertJobHistory(JobExecutionContext context) {
         JobHistoryDto jobHistoryDto = createJobHistory(context, JobStatus.STARTED);
 
-        jobHistoryMapper.insertJobHistory(jobHistoryDto);
+        jobHistoryRepository.insertJobHistory(modelMapper.map(jobHistoryDto, JobHistory.class));
     }
 
     public void updateJobHistory(JobExecutionContext context, JobExecutionException jobException) {
@@ -45,7 +52,7 @@ public class JobHistoryService {
             jobHistoryDto.setExitMessage(stringWriter.toString());
         }
 
-        jobHistoryMapper.updateJobHistory(jobHistoryDto);
+        jobHistoryRepository.updateJobHistory(modelMapper.map(jobHistoryDto, JobHistory.class));
     }
 
     private JobHistoryDto createJobHistory(JobExecutionContext context, JobStatus jobStatus) {
