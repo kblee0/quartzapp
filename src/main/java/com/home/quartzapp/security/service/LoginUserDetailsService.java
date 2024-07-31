@@ -3,7 +3,6 @@ package com.home.quartzapp.security.service;
 import com.home.quartzapp.security.entity.LoginUser;
 import com.home.quartzapp.security.repository.LoginUserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

@@ -196,12 +196,10 @@ public class SchedulerService {
                 jobInfoDto.setStartTime(DateTimeUtil.toLocalDateTime(trigger.getStartTime()));
                 jobInfoDto.setEndTime(DateTimeUtil.toLocalDateTime(trigger.getEndTime()));
 
-                if(trigger instanceof CronTrigger) {
-                    CronTrigger ct = (CronTrigger)trigger;
+                if(trigger instanceof CronTrigger ct) {
                     jobInfoDto.setCronExpression(ct.getCronExpression());
                 }
-                if(trigger instanceof SimpleTrigger) {
-                    SimpleTrigger st = (SimpleTrigger)trigger;
+                if(trigger instanceof SimpleTrigger st) {
                     jobInfoDto.setRepeatIntervalInSeconds((int)(st.getRepeatInterval()/1000));
                     jobInfoDto.setRepeatCount(st.getRepeatCount());
                 }

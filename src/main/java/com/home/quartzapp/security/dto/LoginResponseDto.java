@@ -9,4 +9,7 @@ import lombok.Data;
 @Builder
 public class LoginResponseDto {
     String accessToken;
+    String refreshToken;
+    String tokenType;
+    Long expiresIn;
 }

@@ -3,7 +3,6 @@ package com.home.quartzapp.scheduler.service;
 import lombok.RequiredArgsConstructor;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.home.quartzapp.scheduler.model.JobStatus;

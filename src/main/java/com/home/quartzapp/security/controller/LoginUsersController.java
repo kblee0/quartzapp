@@ -5,7 +5,6 @@ import com.home.quartzapp.security.dto.*;
 import com.home.quartzapp.security.service.JwtService;
 import jakarta.validation.Valid;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -47,8 +46,13 @@ public class LoginUsersController {
 
         if(!authentication.isAuthenticated()) throw new UsernameNotFoundException("invalid user request!");
 
+        JwtTokenDto jwtTokenDto = jwtService.generateToken(loginRequestDto.getLoginId());
+
         LoginResponseDto loginResponseDto = LoginResponseDto.builder()
-                .accessToken(jwtService.generateToken(loginRequestDto.getLoginId()))
+                .accessToken(jwtTokenDto.getAccessToken())
+                .refreshToken(jwtTokenDto.getRefreshToken())
+                .expiresIn(jwtTokenDto.getExpiresIn())
+                .tokenType(jwtTokenDto.getTokenType())
                 .build();
 
         return ResponseEntity.ok(loginResponseDto);

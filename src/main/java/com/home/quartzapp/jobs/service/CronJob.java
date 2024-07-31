@@ -12,14 +12,14 @@ import java.util.stream.IntStream;
 
 @Slf4j
 public class CronJob extends QuartzJobBean {
-	private int MAX_SLEEP_IN_SECONDS = 5;
+	private final int MAX_SLEEP_IN_SECONDS = 5;
 
 	private volatile Thread currThread;
 
 	@Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
 		JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
-		if (jobDataMap.size() > 0) {
+		if (!jobDataMap.isEmpty()) {
 			// int jobId = jobDataMap.getInt("jobId");
 			JobKey jobKey = context.getJobDetail().getKey();
 

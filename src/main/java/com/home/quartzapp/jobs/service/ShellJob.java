@@ -81,7 +81,7 @@ public class ShellJob extends QuartzJobBean implements InterruptableJob {
             builder.command("sh", "-c", command);
         }
 
-        log.info("{} :: cwd: {}, comand: {}", jobDetail.getKey(), cwd.getAbsolutePath(), command);
+        log.info("{} :: cwd: {}, command: {}", jobDetail.getKey(), cwd.getAbsolutePath(), command);
 
         shellProcess = builder.start();
         BufferedReader reader = new BufferedReader(new InputStreamReader(shellProcess.getInputStream()));

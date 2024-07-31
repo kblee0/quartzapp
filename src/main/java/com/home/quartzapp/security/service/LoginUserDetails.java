@@ -14,12 +14,14 @@ public class LoginUserDetails implements UserDetails {
 
     private final String username;
     private final String password;
+    private final String displayName;
     private final List<GrantedAuthority> authorities;
 
-    public LoginUserDetails(LoginUser loginUer) {
-        username = loginUer.getLoginId();
-        password = loginUer.getPassword();
-        authorities = Arrays.stream(loginUer.getRoles().split(","))
+    public LoginUserDetails(LoginUser loginUser) {
+        username = loginUser.getLoginId();
+        password = loginUser.getPassword();
+        displayName = loginUser.getName();
+        authorities = Arrays.stream(loginUser.getRoles().split(","))
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
     }

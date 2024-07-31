@@ -38,63 +38,63 @@ public class DateTimeConfig {
         ObjectMapper objectMapper = new ObjectMapper();
         JavaTimeModule javaTimeModule = new JavaTimeModule();
         javaTimeModule.addSerializer(LocalDateTime.class, new
-                JsonSerializer<LocalDateTime>() {
-            @Override
-            public void serialize(LocalDateTime value, JsonGenerator gen, SerializerProvider serializers)
-                    throws IOException {
-                gen.writeString(DateTimeFormatter.ofPattern(DATETIME_FORMAT_STRING).format(value));
-            }
-        }
+                JsonSerializer<>() {
+                    @Override
+                    public void serialize(LocalDateTime value, JsonGenerator gen, SerializerProvider serializers)
+                            throws IOException {
+                        gen.writeString(DateTimeFormatter.ofPattern(DATETIME_FORMAT_STRING).format(value));
+                    }
+                }
         );
         javaTimeModule.addSerializer(LocalDate.class, new
-                JsonSerializer<LocalDate>() {
-            @Override
-            public void serialize(LocalDate value, JsonGenerator gen, SerializerProvider serializers)
-                    throws IOException {
-                gen.writeString(DateTimeFormatter.ofPattern(DATE_FORMAT_STRING).format(value));
-            }
-        }
+                JsonSerializer<>() {
+                    @Override
+                    public void serialize(LocalDate value, JsonGenerator gen, SerializerProvider serializers)
+                            throws IOException {
+                        gen.writeString(DateTimeFormatter.ofPattern(DATE_FORMAT_STRING).format(value));
+                    }
+                }
         );
         javaTimeModule.addSerializer(LocalTime.class, new
-                JsonSerializer<LocalTime>() {
-            @Override
-            public void serialize(LocalTime value, JsonGenerator gen, SerializerProvider serializers)
-                    throws IOException {
-                gen.writeString(DateTimeFormatter.ofPattern(TIME_FORMAT_STRING).format(value));
-            }
-        }
+                JsonSerializer<>() {
+                    @Override
+                    public void serialize(LocalTime value, JsonGenerator gen, SerializerProvider serializers)
+                            throws IOException {
+                        gen.writeString(DateTimeFormatter.ofPattern(TIME_FORMAT_STRING).format(value));
+                    }
+                }
         );
         javaTimeModule.addSerializer(Date.class, new
-                JsonSerializer<Date>() {
-            @Override
-            public void serialize(Date value, JsonGenerator gen, SerializerProvider serializers)
-                    throws IOException {
-                gen.writeString(new SimpleDateFormat(DATETIME_FORMAT_STRING).format(value));
-            }
-        }
+                JsonSerializer<>() {
+                    @Override
+                    public void serialize(Date value, JsonGenerator gen, SerializerProvider serializers)
+                            throws IOException {
+                        gen.writeString(new SimpleDateFormat(DATETIME_FORMAT_STRING).format(value));
+                    }
+                }
         );
-        javaTimeModule.addDeserializer(LocalDateTime.class, new JsonDeserializer<LocalDateTime>() {
+        javaTimeModule.addDeserializer(LocalDateTime.class, new JsonDeserializer<>() {
             @Override
             public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt)
                     throws IOException, JacksonException {
                 return LocalDateTime.parse(p.getValueAsString(), DateTimeFormatter.ofPattern(DATETIME_FORMAT_STRING));
             }
         });
-        javaTimeModule.addDeserializer(LocalDate.class, new JsonDeserializer<LocalDate>() {
+        javaTimeModule.addDeserializer(LocalDate.class, new JsonDeserializer<>() {
             @Override
             public LocalDate deserialize(JsonParser p, DeserializationContext ctxt)
                     throws IOException, JacksonException {
                 return LocalDate.parse(p.getValueAsString(), DateTimeFormatter.ofPattern(DATE_FORMAT_STRING));
             }
         });
-        javaTimeModule.addDeserializer(LocalTime.class, new JsonDeserializer<LocalTime>() {
+        javaTimeModule.addDeserializer(LocalTime.class, new JsonDeserializer<>() {
             @Override
             public LocalTime deserialize(JsonParser p, DeserializationContext ctxt)
                     throws IOException, JacksonException {
                 return LocalTime.parse(p.getValueAsString(), DateTimeFormatter.ofPattern(TIME_FORMAT_STRING));
             }
         });
-        javaTimeModule.addDeserializer(Date.class, new JsonDeserializer<Date>() {
+        javaTimeModule.addDeserializer(Date.class, new JsonDeserializer<>() {
             @Override
             public Date deserialize(JsonParser p, DeserializationContext ctxt)
                     throws IOException, JacksonException {
@@ -111,13 +111,14 @@ public class DateTimeConfig {
 
     @Bean
     Formatter<LocalDateTime> localDateTimeFormatter() {
-        return new Formatter<LocalDateTime>() {
+        return new Formatter<>() {
             @Override
             public String print(LocalDateTime object, Locale locale) {
                 return DateTimeFormatter.ofPattern(DATETIME_FORMAT_STRING).format(object);
             }
+
             @Override
-            public LocalDateTime parse(String text, Locale locale) throws ParseException {
+            public LocalDateTime parse(String text, Locale locale) {
                 return LocalDateTime.parse(text, DateTimeFormatter.ofPattern(DATETIME_FORMAT_STRING, locale));
             }
         };
@@ -125,13 +126,14 @@ public class DateTimeConfig {
 
     @Bean
     Formatter<LocalDate> localDateFormatter() {
-        return new Formatter<LocalDate>() {
+        return new Formatter<>() {
             @Override
             public String print(LocalDate object, Locale locale) {
                 return DateTimeFormatter.ofPattern(DATE_FORMAT_STRING).format(object);
             }
+
             @Override
-            public LocalDate parse(String text, Locale locale) throws ParseException {
+            public LocalDate parse(String text, Locale locale) {
                 return LocalDate.parse(text, DateTimeFormatter.ofPattern(DATE_FORMAT_STRING, locale));
             }
         };
@@ -139,13 +141,14 @@ public class DateTimeConfig {
 
     @Bean
     Formatter<LocalTime> localTimeFormatter() {
-        return new Formatter<LocalTime>() {
+        return new Formatter<>() {
             @Override
             public String print(LocalTime object, Locale locale) {
                 return DateTimeFormatter.ofPattern(TIME_FORMAT_STRING).format(object);
             }
+
             @Override
-            public LocalTime parse(String text, Locale locale) throws ParseException {
+            public LocalTime parse(String text, Locale locale) {
                 return LocalTime.parse(text, DateTimeFormatter.ofPattern(TIME_FORMAT_STRING, locale));
             }
         };
@@ -153,11 +156,12 @@ public class DateTimeConfig {
 
     @Bean
     Formatter<Date> dateFormatter() {
-        return new Formatter<Date>() {
+        return new Formatter<>() {
             @Override
             public String print(Date object, Locale locale) {
                 return new SimpleDateFormat(DATETIME_FORMAT_STRING).format(object);
             }
+
             @Override
             public Date parse(String text, Locale locale) throws ParseException {
                 return new SimpleDateFormat(DATETIME_FORMAT_STRING, locale).parse(text);

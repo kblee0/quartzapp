@@ -18,7 +18,6 @@ import com.home.quartzapp.scheduler.repository.JobHistoryRepository;
 import com.home.quartzapp.scheduler.model.JobStatus;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -70,7 +69,7 @@ public class JobHistoryService {
             jobHistoryDto.setStatus(jobStatus.name());
             jobHistoryDto.setJobData(mapper.writeValueAsString(context.getJobDetail().getJobDataMap()));
         } catch (SchedulerException e) {
-            log.error("createJobHistory :: {}", e);
+            log.error("createJobHistory :: {}", e.getMessage());
             return null;
         } catch (JsonProcessingException e) {
             log.error("jobDataMap writeValueAsString error :: jobDataMap: {}, {}",

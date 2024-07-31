@@ -11,7 +11,7 @@ import java.util.stream.IntStream;
 
 @Slf4j
 public class SimpleJob extends QuartzJobBean {
-	private int MAX_SLEEP_IN_SECONDS = 3;
+	private final int MAX_SLEEP_IN_SECONDS = 3;
 
 	private volatile Thread currThread;
 
