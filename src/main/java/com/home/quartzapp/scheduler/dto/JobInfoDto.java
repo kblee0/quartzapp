@@ -29,6 +29,7 @@ public class JobInfoDto {
     private String description;
     private String jobClassName;
     private JobDataMap jobDataMap;
+    private boolean interruptible;
 
     // Trigger
     private LocalDateTime startTime;

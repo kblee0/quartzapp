@@ -35,7 +35,6 @@ public class ApiException extends RuntimeException {
     public ApiErrorDto body() {
         return new ApiErrorDto(this.getErrorCode(), this.getErrorMessage());
     }
-
     public static ApiException code(String errorCode, Object ...args) {
         return new ApiException(errorCode, args);
     }

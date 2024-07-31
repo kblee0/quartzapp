@@ -10,12 +10,15 @@ import lombok.Getter;
 public enum ErrorCode {
     // Scheduler
     SCHE0001("Job already exist.", HttpStatus.BAD_REQUEST),
-    SCHE0002("Job does not exist.", HttpStatus.BAD_REQUEST),
+    SCHE0002("Job does not exist.", HttpStatus.NOT_FOUND),
     SCHE0003("Job class not found.", HttpStatus.BAD_REQUEST),
     SCHE0004("Scheduler exception error.", HttpStatus.INTERNAL_SERVER_ERROR),
+    SCHE0005("It is not an interruptible job.", HttpStatus.BAD_REQUEST),
 
     // Security
     SCR0001("The login Id or password is incorrect.", HttpStatus.UNAUTHORIZED),
+    SCR0002("Credentials have expired.", HttpStatus.UNAUTHORIZED),
+    SCR0003("Rejected because the credentials are not configured properly.", HttpStatus.UNAUTHORIZED),
 
     // Common Error
     CMNE0001("Internal server error", null),

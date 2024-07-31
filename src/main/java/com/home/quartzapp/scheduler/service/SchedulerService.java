@@ -185,6 +185,7 @@ public class SchedulerService {
                                     .name(jobDetail.getKey().getName())
                                     .description(jobDetail.getDescription())
                                     .jobClassName(jobDetail.getJobClass().getName())
+                                    .interruptible(jobDetail.getJobClass().isAssignableFrom(InterruptableJob.class))
                                     .jobDataMap(jobDetail.getJobDataMap())
                                     .build();
 
@@ -290,9 +291,19 @@ public class SchedulerService {
     }
 
     public JobStatusDto interruptJob(JobKey jobKey) {
+        JobDetail jobDetail;
+
         try {
+            jobDetail = schedulerFactoryBean.getScheduler().getJobDetail(jobKey);
+
+            if(!jobDetail.getClass().isAssignableFrom(InterruptableJob.class)) {
+                throw ApiException.code("SCHE0005");
+            }
             schedulerFactoryBean.getScheduler().interrupt(jobKey);
         } catch (UnableToInterruptJobException e) {
+            log.error("error occurred while interrupt job with jobKey : {}", jobKey, e);
+            throw ApiException.code("SCHE0004");
+        } catch (SchedulerException e) {
             log.error("error occurred while interrupt job with jobKey : {}", jobKey, e);
             throw ApiException.code("SCHE0004");
         }
