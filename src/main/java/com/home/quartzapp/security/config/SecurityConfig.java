@@ -32,8 +32,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/favicon.ico").permitAll())
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/v1/users/login").permitAll())
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/scheduler/**").authenticated())
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/v1/auth/token").permitAll())
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/v1/scheduler/**").authenticated())
                 // H2 Console
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/h2-console/**").permitAll())
                 .headers(headersConfigurer -> headersConfigurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))

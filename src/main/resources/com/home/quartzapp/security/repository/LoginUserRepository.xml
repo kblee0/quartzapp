@@ -9,8 +9,14 @@
 			PASSWORD,
 			NAME,
 			EMAIL,
-			ROLES
+			ROLES,
+			REFRESH_TOKEN
 		FROM T_LOGIN_USER
 		WHERE LOGIN_ID = #{loginId}
 	</select>
+	<update id="updateLoginUserRefreshToken">
+		UPDATE T_LOGIN_USER
+		SET    REFRESH_TOKEN = #{refreshToken}
+		WHERE  LOGIN_ID = #{loginId}
+	</update>
 </mapper>

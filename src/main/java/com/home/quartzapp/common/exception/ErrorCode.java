@@ -19,9 +19,12 @@ public enum ErrorCode {
     SCR0001("The login Id or password is incorrect.", HttpStatus.UNAUTHORIZED),
     SCR0002("Credentials have expired.", HttpStatus.UNAUTHORIZED),
     SCR0003("Rejected because the credentials are not configured properly.", HttpStatus.UNAUTHORIZED),
+    SCR0004("Refresh token have expired.", HttpStatus.UNAUTHORIZED),
+    SCR0005("Refresh token invalid.", HttpStatus.UNAUTHORIZED),
+
 
     // Common Error
-    CMNE0001("Internal server error", null),
+    CMNE0001("Internal server error. %s", HttpStatus.INTERNAL_SERVER_ERROR),
     CMNE0002("Request not valid.", HttpStatus.BAD_REQUEST),
     CMNE0003("Method not allowed.", HttpStatus.METHOD_NOT_ALLOWED),
     CMNE0004("Invalid parameter.", HttpStatus.BAD_REQUEST),

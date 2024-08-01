@@ -72,7 +72,7 @@ public class JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public Date extractExpiration(String token) {
+    public Date extractExpiration(String token)  throws ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, SignatureException, IllegalArgumentException {
         return extractClaim(token, Claims::getExpiration);
     }
 
@@ -96,14 +96,19 @@ public class JwtService {
     }
 
     public Boolean validateToken(String token, UserDetails userDetails) {
+        if(this.validateToken(token)) {
+            final String loginId = extractUsername(token);
+            return loginId.equals(userDetails.getUsername());
+        }
+        return false;
+    }
+    public Boolean validateToken(String token) {
         try {
             Jws<Claims> claims = Jwts.parserBuilder()
                     .setSigningKey(getSignKey())
                     .build()
                     .parseClaimsJws(token);
-
-            final String loginId = claims.getBody().getSubject();
-            return loginId.equals(userDetails.getUsername());
+            return true;
         } catch (io.jsonwebtoken.security.SignatureException | MalformedJwtException e) {
             log.debug("Invalid JWT Token. {}", e.getMessage());
         } catch(ExpiredJwtException e) {

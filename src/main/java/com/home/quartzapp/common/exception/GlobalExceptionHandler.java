@@ -65,7 +65,7 @@ public class GlobalExceptionHandler {
     protected ResponseEntity<?> handleException(Exception e) {
         log.error("handleException", e);
 
-        ApiException apiException = new ApiException("CMNE0001");
+        ApiException apiException = new ApiException("CMNE0001", e.getMessage());
 
         return ResponseEntity.status(apiException.getHttpStatus()).body(apiException.body());
     }

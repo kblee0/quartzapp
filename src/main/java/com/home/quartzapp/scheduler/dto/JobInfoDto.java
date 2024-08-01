@@ -36,8 +36,8 @@ public class JobInfoDto {
     private LocalDateTime endTime;
 
     // SimpleTrigger
-    private int repeatIntervalInSeconds;
-    private int repeatCount;    // -1: Unlimited, 0: One-time (zero repeat)
+    private Integer repeatIntervalInSeconds;
+    private Integer repeatCount;    // -1: Unlimited, 0: One-time (zero repeat)
 
     // CronTrigger
     private String cronExpression;

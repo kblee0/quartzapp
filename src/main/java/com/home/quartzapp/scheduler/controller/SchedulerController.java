@@ -24,6 +24,7 @@ import java.net.URI;
 @Validated
 @RestController
 @RequiredArgsConstructor
+@RequestMapping(value = "/api/v1")
 public class SchedulerController {
     private final SchedulerService schedulerService;
 
@@ -97,7 +98,7 @@ public class SchedulerController {
         return ResponseEntity.ok(jobListDto);
     }
 
-    @RequestMapping(value = "/scheduler/jobs/{jobGroup}/{jobName}/pause", method = RequestMethod.POST)
+    @RequestMapping(value = "/scheduler/jobs/{jobGroup}/{jobName}/pause", method = RequestMethod.PATCH)
     public ResponseEntity<?> pauseJob(
         @NotBlank @PathVariable(name = "jobGroup") String jobGroup,
         @NotBlank @PathVariable(name = "jobName") String jobName) {
@@ -114,7 +115,7 @@ public class SchedulerController {
         return ResponseEntity.ok(jobStatusDto);
     }
 
-    @RequestMapping(value = "/scheduler/jobs/{jobGroup}/{jobName}/resume", method = RequestMethod.POST)
+    @RequestMapping(value = "/scheduler/jobs/{jobGroup}/{jobName}/resume", method = RequestMethod.PATCH)
     public ResponseEntity<?> resumeJob(
         @NotBlank @PathVariable(name = "jobGroup") String jobGroup,
         @NotBlank @PathVariable(name = "jobName") String jobName) {
@@ -131,7 +132,7 @@ public class SchedulerController {
         return ResponseEntity.ok(jobStatusDto);
     }
 
-    @RequestMapping(value = "/scheduler/jobs/{jobGroup}/{jobName}/interrupt", method = RequestMethod.POST)
+    @RequestMapping(value = "/scheduler/jobs/{jobGroup}/{jobName}/interrupt", method = RequestMethod.PATCH)
     public ResponseEntity<?> interruptJob(
         @NotBlank @PathVariable(name = "jobGroup") String jobGroup,
         @NotBlank @PathVariable(name = "jobName") String jobName) {
