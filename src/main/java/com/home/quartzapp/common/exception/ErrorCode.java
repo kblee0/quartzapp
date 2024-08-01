@@ -14,6 +14,7 @@ public enum ErrorCode {
     SCHE0003("Job class not found.", HttpStatus.BAD_REQUEST),
     SCHE0004("Scheduler exception error.", HttpStatus.INTERNAL_SERVER_ERROR),
     SCHE0005("It is not an interruptible job.", HttpStatus.BAD_REQUEST),
+    SCHE0006("A job cannot be created as it is not a Quartz job class.", HttpStatus.BAD_REQUEST),
 
     // Security
     SCR0001("The login Id or password is incorrect.", HttpStatus.UNAUTHORIZED),
