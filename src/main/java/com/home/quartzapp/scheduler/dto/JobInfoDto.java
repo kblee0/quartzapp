@@ -1,22 +1,15 @@
 package com.home.quartzapp.scheduler.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import jakarta.validation.constraints.NotEmpty;
+import lombok.*;
 
 import org.quartz.JobDataMap;
-import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
+import java.util.Set;
 
 import jakarta.validation.constraints.NotBlank;
 
-@Getter
-@Setter
-@ToString
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -31,18 +24,5 @@ public class JobInfoDto {
     private JobDataMap jobDataMap;
     private boolean interruptible;
 
-    // Trigger
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
-
-    // SimpleTrigger
-    private Integer repeatIntervalInSeconds;
-    private Integer repeatCount;    // -1: Unlimited, 0: One-time (zero repeat)
-
-    // CronTrigger
-    private String cronExpression;
-
-    public boolean isCronJob() {
-        return StringUtils.hasText(this.cronExpression);
-    }
+    private Set<JobTriggerDto> triggers;
 }

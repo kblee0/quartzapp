@@ -1,10 +1,7 @@
 package com.home.quartzapp.jobs.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.quartz.JobDataMap;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
-import org.quartz.JobKey;
+import org.quartz.*;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
 import java.util.concurrent.TimeUnit;
@@ -22,11 +19,11 @@ public class CronJob extends QuartzJobBean {
 		if (!jobDataMap.isEmpty()) {
 			// int jobId = jobDataMap.getInt("jobId");
 			JobKey jobKey = context.getJobDetail().getKey();
+			TriggerKey triggerKey = context.getTrigger().getKey();
 
 			currThread = Thread.currentThread();
 			log.info("============================================================================");
-			// log.info("CronJob started :: sleep : {} jobId : {} jobKey : {} - {}", MAX_SLEEP_IN_SECONDS, jobId, jobKey, currThread.getName());
-			log.info("CronJob started :: sleep : {} : jobKey : {} - {}", MAX_SLEEP_IN_SECONDS, jobKey, currThread.getName());
+			log.info("CronJob started :: sleep : {} : jobKey : {} : TriggerKey : {} : TM : {}", MAX_SLEEP_IN_SECONDS, jobKey, triggerKey, currThread.getName());
 
 			IntStream.range(0, 3).forEach(i -> {
 				log.info("CronJob Counting - {}", i);

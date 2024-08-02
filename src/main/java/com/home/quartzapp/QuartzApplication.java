@@ -25,7 +25,13 @@ public class QuartzApplication {
 		log.info("===========================================================");
 		log.info("- Application ready....");
 		log.info("- Starting scheduler...");
-		schedulerFactoryBean.getScheduler().start();
+		try {
+			schedulerFactoryBean.getScheduler().start();
+		} catch (SchedulerException e) {
+			log.error("Quartz scheduler start failed.", e);
+			schedulerFactoryBean.getScheduler().standby();
+			log.info("Qartz scheduler start with standby mode.");
+		}
 		log.info("===========================================================");
 	}
 }
