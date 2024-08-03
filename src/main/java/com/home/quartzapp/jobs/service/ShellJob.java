@@ -10,7 +10,6 @@ import org.quartz.InterruptableJob;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.quartz.UnableToInterruptJobException;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
 import lombok.extern.slf4j.Slf4j;
@@ -93,13 +92,11 @@ public class ShellJob extends QuartzJobBean implements InterruptableJob {
             }
         }
 
-        int exitCode = shellProcess.waitFor();
-
-        return exitCode;
+        return shellProcess.waitFor();
     }
 
     @Override
-    public void interrupt() throws UnableToInterruptJobException {
+    public void interrupt() {
         log.info("{} :: Job interrupt", jobDetail.getKey());
         
             destoryProcessHandleTree(shellProcess.toHandle());
@@ -107,7 +104,7 @@ public class ShellJob extends QuartzJobBean implements InterruptableJob {
     }
 
     private void destoryProcessHandleTree(ProcessHandle handle) {
-        handle.descendants().forEach((child) -> destoryProcessHandleTree(child));
+        handle.descendants().forEach(this::destoryProcessHandleTree);
         
         String commandLine = handle.info().command().orElse("(null)");
 

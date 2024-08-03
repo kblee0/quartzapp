@@ -11,16 +11,3 @@ spring:
     url: jdbc:h2:./quartzapp-h2;DATABASE_TO_UPPER=TRUE;AUTO_SERVER=TRUE
     username: sa
     password:
-  quartz:
-    properties:
-      org:
-        quartz:
-          dataSource:
-            myDS:
-              provider: hikaricp
-              driver: org.h2.Driver
-              URL: jdbc:h2:./quartzapp-h2;DATABASE_TO_UPPER=TRUE;AUTO_SERVER=TRUE
-              username: sa
-              password:
-              maxConnections: 5
-              validationQuery: select 0

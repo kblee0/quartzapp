@@ -3,7 +3,6 @@ package com.home.quartzapp.jobs.service;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
 
 import java.util.concurrent.TimeUnit;
@@ -16,7 +15,7 @@ public class CronJob2 implements Job {
 	private volatile Thread currThread;
 
 	@Override
-	public void execute(JobExecutionContext context) throws JobExecutionException {
+	public void execute(JobExecutionContext context) {
 		JobKey jobKey = context.getJobDetail().getKey();
 		currThread = Thread.currentThread();
 		log.info("============================================================================");

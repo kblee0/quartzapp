@@ -3,11 +3,9 @@ package com.home.quartzapp.scheduler.dto;
 import java.time.LocalDateTime;
 
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 @Builder
 public class JobStatusDto {
 	private JobInfoDto jobInfoDto;

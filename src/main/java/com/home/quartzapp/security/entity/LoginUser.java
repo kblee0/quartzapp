@@ -1,13 +1,8 @@
 package com.home.quartzapp.security.entity;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class LoginUser {
     private int id;
     private String loginId;

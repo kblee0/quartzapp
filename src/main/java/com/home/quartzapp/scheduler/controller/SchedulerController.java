@@ -1,6 +1,7 @@
 package com.home.quartzapp.scheduler.controller;
 
 import com.home.quartzapp.common.exception.ApiException;
+import com.home.quartzapp.scheduler.dto.JobDataMapDto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
@@ -98,31 +99,21 @@ public class SchedulerController {
     public ResponseEntity<?> commandJob(
             @NotBlank @PathVariable(name = "jobGroup") String jobGroup,
             @NotBlank @PathVariable(name = "jobName") String jobName,
-            @RequestParam(value = "command", required = true) String command) {
+            @NotBlank @RequestParam(value = "command") String command,
+            @RequestBody(required = false) JobDataMapDto jobDataMapDto) {
         JobKey jobKey = new JobKey(jobName, jobGroup);
 
         if (!schedulerService.isJobExists(jobKey)) {
             throw ApiException.code("SCHE0002");
         }
 
-        JobStatusDto jobStatusDto;
-
-        switch (command) {
-            case "execute":
-                jobStatusDto = schedulerService.executeJob(jobKey);
-                break;
-            case "pause":
-                jobStatusDto = schedulerService.pauseJob(jobKey);
-                break;
-            case "resume":
-                jobStatusDto = schedulerService.resumeJob(jobKey);
-                break;
-            case "interrupt":
-                jobStatusDto = schedulerService.interruptJob(jobKey);
-                break;
-            default:
-                throw ApiException.code("SCHE0003");
-        }
+        JobStatusDto jobStatusDto = switch (command) {
+            case "execute" -> schedulerService.executeJob(jobKey, jobDataMapDto);
+            case "pause" -> schedulerService.pauseJob(jobKey);
+            case "resume" -> schedulerService.resumeJob(jobKey);
+            case "interrupt" -> schedulerService.interruptJob(jobKey);
+            default -> throw ApiException.code("SCHE0007");
+        };
 
         return ResponseEntity.ok(jobStatusDto);
     }

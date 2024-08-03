@@ -2,16 +2,10 @@ package com.home.quartzapp.security.controller;
 
 import com.home.quartzapp.common.exception.ApiException;
 import com.home.quartzapp.security.dto.*;
-import com.home.quartzapp.security.service.JwtService;
 import com.home.quartzapp.security.service.LoginUserService;
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
@@ -24,7 +18,7 @@ public class LoginUsersController {
 
     @RequestMapping(value = "/auth/token", method = RequestMethod.POST)
     public ResponseEntity<?> userLogin(
-            @RequestParam(value="grant_type", required = true) String grantType,
+            @RequestParam(value="grant_type") String grantType,
             @Valid @RequestBody LoginRequestDto loginRequestDto) {
         if(grantType.equals("password")) {
             return ResponseEntity.ok(loginUserService.userLogin(loginRequestDto));

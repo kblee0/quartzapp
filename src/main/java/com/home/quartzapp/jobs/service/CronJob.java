@@ -14,7 +14,7 @@ public class CronJob extends QuartzJobBean {
 	private volatile Thread currThread;
 
 	@Override
-	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
+	protected void executeInternal(JobExecutionContext context) {
 		JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
 		if (!jobDataMap.isEmpty()) {
 			// int jobId = jobDataMap.getInt("jobId");

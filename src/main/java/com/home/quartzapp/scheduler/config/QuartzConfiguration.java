@@ -48,21 +48,21 @@ public class QuartzConfiguration {
     @Bean
     SchedulerFactoryBean schedulerFactoryBean(ApplicationContext applicationContext) {
         AutowireCapableBeanJobFactory jobFactory = new AutowireCapableBeanJobFactory();
-        Properties properties = new Properties();
         SchedulerFactoryBean schedulerFactoryBean = new SchedulerFactoryBean();
+        Properties properties = new Properties();
 
         properties.putAll(quartzProperties.getProperties());
 
         jobFactory.setApplicationContext(applicationContext);
 
+        schedulerFactoryBean.setDataSource(dataSource);
+        schedulerFactoryBean.setJobFactory(jobFactory);
+        schedulerFactoryBean.setQuartzProperties(properties);
         schedulerFactoryBean.setGlobalTriggerListeners(triggerListener);
         schedulerFactoryBean.setGlobalJobListeners(jobListener);
         schedulerFactoryBean.setOverwriteExistingJobs(true);
         schedulerFactoryBean.setWaitForJobsToCompleteOnShutdown(true);
         schedulerFactoryBean.setApplicationContext(applicationContext);
-        schedulerFactoryBean.setDataSource(dataSource);
-        schedulerFactoryBean.setJobFactory(jobFactory);
-        schedulerFactoryBean.setQuartzProperties(properties);
         schedulerFactoryBean.setAutoStartup(false);
 
         return schedulerFactoryBean;

@@ -4,7 +4,7 @@ import java.time.ZoneId;
 import java.util.*;
 
 import com.home.quartzapp.common.exception.ApiException;
-import com.home.quartzapp.scheduler.dto.JobTriggerDto;
+import com.home.quartzapp.scheduler.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.quartz.*;
 import org.quartz.impl.matchers.GroupMatcher;
@@ -13,9 +13,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.home.quartzapp.scheduler.dto.JobInfoDto;
-import com.home.quartzapp.scheduler.dto.JobListDto;
-import com.home.quartzapp.scheduler.dto.JobStatusDto;
 import com.home.quartzapp.scheduler.util.DateTimeUtil;
 
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +23,7 @@ import static org.quartz.CronExpression.isValidExpression;
 @Component
 @RequiredArgsConstructor
 @Transactional
+@ExecuteInJTATransaction
 public class SchedulerService {
     private final SchedulerFactoryBean schedulerFactoryBean;
 
@@ -51,24 +49,44 @@ public class SchedulerService {
         JobDetail jobDetail = this.createJobDetail(jobInfoDto);
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
 
-        Set<Trigger> trigger = new HashSet<>();
-        jobInfoDto.getTriggers().forEach(t -> trigger.add(this.createTrigger(jobDetail.getKey(),t)));
+
+        Set<Trigger> triggers = new HashSet<>();
+        jobInfoDto.getTriggers().forEach(t -> triggers.add(this.createTrigger(jobDetail.getKey(),t)));
 
         try {
-            Set<Trigger> currentTriggers = new HashSet<>();
-            scheduler.getTriggersOfJob(jobDetail.getKey()).forEach(t -> currentTriggers.add(t));
+            // JobDetail Update
+            scheduler.addJob(jobDetail, true);
 
+            Set<Trigger> currentTriggers = new HashSet<>(scheduler.getTriggersOfJob(jobDetail.getKey()));
+            String triggerState = null;
+
+            // Reschedule
             List<TriggerKey> delTriggers = new ArrayList<>();
             for(Trigger t : currentTriggers) {
-                Trigger findTrigger = trigger.stream().filter(f -> f.getKey().equals(t.getKey())).findFirst().orElse(null);
-                if(findTrigger == null || !findTrigger.getClass().equals(t.getClass())) {
+                Trigger findTrigger = triggers.stream().filter(f -> f.getKey().equals(t.getKey())).findFirst().orElse(null);
+                if(findTrigger == null) {
                     delTriggers.add(t.getKey());
+                } else if(!findTrigger.getClass().equals(t.getClass())) {
+                    triggerState = scheduler.getTriggerState(t.getKey()).name();
+                    scheduler.rescheduleJob(t.getKey(), findTrigger);
+                    if("PAUSED".equals(triggerState)) {
+                        scheduler.pauseTrigger(findTrigger.getKey());
+                    }
                 }
             }
-
+            // Unscheduled
             if(!delTriggers.isEmpty() ) scheduler.unscheduleJobs(delTriggers);
-            scheduler.scheduleJob(jobDetail, trigger, true);
 
+            // Add Schedule
+            for(Trigger t : triggers) {
+                Trigger findTrigger = currentTriggers.stream().filter(f -> f.getKey().equals(t.getKey())).findFirst().orElse(null);
+                if(findTrigger == null) {
+                    scheduler.scheduleJob(t);
+                    if("PAUSED".equals(triggerState)) {
+                        scheduler.pauseTrigger(t.getKey());
+                    }
+                }
+            }
         } catch (SchedulerException e) {
             log.error("error occurred while scheduling with jobInfoDto : {}", jobInfoDto, e);
             throw ApiException.code("SCHE0004");
@@ -237,12 +255,6 @@ public class SchedulerService {
             }
             jobStatusDto.setJobInfoDto(jobInfoDto);
 
-//            jobStatusDto = JobStatusDto.builder()
-//                    .jobInfoDto(jobInfoDto)
-//                    .lastFiredTime(DateTimeUtil.toLocalDateTime(trigger.getPreviousFireTime()))
-//                    .nextFireTime(DateTimeUtil.toLocalDateTime(trigger.getNextFireTime()))
-//                    .jobState(scheduler.getTriggerState(trigger.getKey()).name())
-//                    .build();
             if(isJobRunning(jobKey)) {
                 jobStatusDto.setJobState("RUNNING");
             }
@@ -267,7 +279,7 @@ public class SchedulerService {
         try {
             List<String> groupList;
 
-            groupList = StringUtils.hasText(jobGroup) ? Arrays.asList(jobGroup) : scheduler.getJobGroupNames();
+            groupList = StringUtils.hasText(jobGroup) ? List.of(jobGroup) : scheduler.getJobGroupNames();
             
             for(String groupName :  groupList) {
                 numOfGroups++;
@@ -292,9 +304,15 @@ public class SchedulerService {
                 .build();
     }
 
-    public JobStatusDto executeJob(JobKey jobKey) {
+    public JobStatusDto executeJob(JobKey jobKey, JobDataMapDto jobDataMapDto) {
         try {
-            schedulerFactoryBean.getScheduler().triggerJob(jobKey);
+            JobDataMap jobDataMap = Optional.ofNullable(jobDataMapDto).map(JobDataMapDto::getJobDataMap).orElse(null);
+            if(jobDataMap == null) {
+                schedulerFactoryBean.getScheduler().triggerJob(jobKey);
+            }
+            else {
+                schedulerFactoryBean.getScheduler().triggerJob(jobKey, jobDataMap);
+            }
         } catch (SchedulerException e) {
             log.error("error occurred while execute job with jobKey : {}", jobKey, e);
             throw ApiException.code("SCHE0004");

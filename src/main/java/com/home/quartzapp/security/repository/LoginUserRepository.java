@@ -8,6 +8,6 @@ import java.util.Optional;
 
 @Mapper
 public interface LoginUserRepository {
-    public Optional<LoginUser> getLoginUser(@Param("loginId") String loginId);
-    public int updateLoginUserRefreshToken(@Param("loginId") String loginId, @Param("refreshToken") String refreshToken);
+    Optional<LoginUser> getLoginUser(@Param("loginId") String loginId);
+    int updateLoginUserRefreshToken(@Param("loginId") String loginId, @Param("refreshToken") String refreshToken);
 }

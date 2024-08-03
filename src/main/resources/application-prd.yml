@@ -17,27 +17,6 @@ spring:
       minimum-idle: 10
       idle-timeout: 600000
       max-lifetime: 1800000
-  quartz:
-    properties:
-      org:
-        quartz:
-          threadPool:
-            class: org.quartz.simpl.SimpleThreadPool
-            threadCount: 5
-          jobStore:
-            tablePrefix: QRTZ_
-            isClustered: false
-            clusterCheckinInterval: 20000
-            dataSource: myDS
-          dataSource:
-            myDS:
-              provider: hikaricp
-              driver: com.mysql.cj.jdbc.Driver
-              URL: ENC(P1mUsyLqf3knuUcUmdwqfIvePtNRVbfQ1+mWrKDP4llgjOX/a4/lyDwB8OAtK9QP)
-              username: ENC(hWgPVHRFzZT9ox2650Gbsg==)
-              password: ENC(nakhqJb9GyYZpIgFUW37/Q==)
-              maxConnections: 5
-              validationQuery: select 0 from dual
 jwt:
   secret: PbiQO0ltYWXbbUe48qo3L4DR1u2KeC4+DOQfiKyOEOU=
   token-expires-in-seconds: 180

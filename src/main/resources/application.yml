@@ -36,22 +36,22 @@ spring:
           threadPool:
             class: org.quartz.simpl.SimpleThreadPool
             threadCount: 5
-          jobStore:
-            class: org.quartz.impl.jdbcjobstore.JobStoreTX
-            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
-            tablePrefix: QRTZ_
-            isClustered: false
-            clusterCheckinInterval: 20000
-            dataSource: myDS
-          dataSource:
-            myDS:
-              provider: hikaricp
-              driver: com.mysql.cj.jdbc.Driver
-              URL: jdbc:mysql://localhost:3306/databasename
-              username: user
-              password: password
-              maxConnections: 5
-              validationQuery: select 0 from dual
+#          jobStore:
+#            class: org.quartz.impl.jdbcjobstore.JobStoreTX
+#            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+#            tablePrefix: QRTZ_
+#            isClustered: false
+#            clusterCheckinInterval: 20000
+#            dataSource: myDS
+#          dataSource:
+#            myDS:
+#              provider: hikaricp
+#              driver: com.mysql.cj.jdbc.Driver
+#              URL: jdbc:mysql://localhost:3306/databasename
+#              username: user
+#              password: password
+#              maxConnections: 5
+#              validationQuery: select 0 from dual
 logging:
   level:
     com.home.quartzapp.scheduler.repository: DEBUG
@@ -66,5 +66,5 @@ mybatis:
 jwt:
   header: Authorization
   secret: PbiQO0ltYWXbbUe48qo3L4DR1u2KeC4+DOQfiKyOEOU=
-  expiration-time-seconds: 180
+  expiration-time-seconds: 3600
   refresh-expiration-time-seconds: 86400

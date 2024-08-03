@@ -7,16 +7,3 @@ spring:
     url: jdbc:mysql://192.168.4.12:3306/ops
     username: ops
     password: jkl123#
-  quartz:
-    properties:
-      org:
-        quartz:
-          dataSource:
-            myDS:
-              provider: hikaricp
-              driver: com.mysql.cj.jdbc.Driver
-              URL: jdbc:mysql://192.168.4.12:3306/ops
-              username: ops
-              password: jkl123#
-              maxConnections: 5
-              validationQuery: select 0 from dual

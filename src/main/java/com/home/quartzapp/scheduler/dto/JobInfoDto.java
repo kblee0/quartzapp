@@ -1,8 +1,7 @@
 package com.home.quartzapp.scheduler.dto;
 
-import jakarta.validation.constraints.NotEmpty;
-import lombok.*;
-
+import lombok.Builder;
+import lombok.Data;
 import org.quartz.JobDataMap;
 
 import java.util.Set;
@@ -10,8 +9,6 @@ import java.util.Set;
 import jakarta.validation.constraints.NotBlank;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
 public class JobInfoDto {
     // JobDetail

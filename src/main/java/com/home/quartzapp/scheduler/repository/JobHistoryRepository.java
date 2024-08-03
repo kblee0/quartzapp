@@ -9,8 +9,8 @@ import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface JobHistoryRepository {
-    public Optional<JobHistory> getJobHistory(@Param("schedName") String schedName, @Param("entryId") String entryId);
-    public int insertJobHistory(JobHistory jobHistory);
-    public int updateJobHistory(JobHistory jobHistory);
-    public List<JobHistory> getJobHistoryList(@Param("jobGroup") String jobGroup, @Param("jobName") String jobName);
+    Optional<JobHistory> getJobHistory(@Param("schedName") String schedName, @Param("entryId") String entryId);
+    int insertJobHistory(JobHistory jobHistory);
+    int updateJobHistory(JobHistory jobHistory);
+    List<JobHistory> getJobHistoryList(@Param("jobGroup") String jobGroup, @Param("jobName") String jobName);
 }

@@ -2,7 +2,6 @@ package com.home.quartzapp.jobs.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
@@ -16,7 +15,7 @@ public class SimpleJob extends QuartzJobBean {
 	private volatile Thread currThread;
 
 	@Override
-	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
+	protected void executeInternal(JobExecutionContext context) {
 		JobKey jobKey = context.getJobDetail().getKey();
 		currThread = Thread.currentThread();
 		log.info("============================================================================");
