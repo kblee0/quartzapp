@@ -18,17 +18,15 @@ import org.springframework.scheduling.quartz.SpringBeanJobFactory;
 
 import com.home.quartzapp.scheduler.service.JobListener;
 import com.home.quartzapp.scheduler.service.TriggerListener;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @RequiredArgsConstructor
 public class QuartzConfiguration {
     private final TriggerListener triggerListener;
     private final JobListener jobListener;
-	private final QuartzProperties quartzProperties;
-	private final DataSource dataSource;
-    
-    public class AutowireCapableBeanJobFactory extends SpringBeanJobFactory {
 
+    private static class AutoWiringSpringBeanJobFactory extends SpringBeanJobFactory {
         private transient AutowireCapableBeanFactory beanFactory;
 
         @Override
@@ -46,24 +44,30 @@ public class QuartzConfiguration {
     }
 
     @Bean
-    SchedulerFactoryBean schedulerFactoryBean(ApplicationContext applicationContext) {
-        AutowireCapableBeanJobFactory jobFactory = new AutowireCapableBeanJobFactory();
-        SchedulerFactoryBean schedulerFactoryBean = new SchedulerFactoryBean();
-        Properties properties = new Properties();
+    SchedulerFactoryBean schedulerFactoryBean(
+            DataSource dataSource,
+            QuartzProperties quartzProperties,
+            PlatformTransactionManager transactionManager,
+            ApplicationContext applicationContext) {
 
-        properties.putAll(quartzProperties.getProperties());
-
+        AutoWiringSpringBeanJobFactory  jobFactory = new AutoWiringSpringBeanJobFactory();
         jobFactory.setApplicationContext(applicationContext);
 
+        Properties properties = new Properties();
+        properties.putAll(quartzProperties.getProperties());
+
+        SchedulerFactoryBean schedulerFactoryBean = new SchedulerFactoryBean();
         schedulerFactoryBean.setDataSource(dataSource);
         schedulerFactoryBean.setJobFactory(jobFactory);
+        schedulerFactoryBean.setApplicationContext(applicationContext);
         schedulerFactoryBean.setQuartzProperties(properties);
-        schedulerFactoryBean.setGlobalTriggerListeners(triggerListener);
-        schedulerFactoryBean.setGlobalJobListeners(jobListener);
+        schedulerFactoryBean.setTransactionManager(transactionManager);
+
         schedulerFactoryBean.setOverwriteExistingJobs(true);
         schedulerFactoryBean.setWaitForJobsToCompleteOnShutdown(true);
-        schedulerFactoryBean.setApplicationContext(applicationContext);
         schedulerFactoryBean.setAutoStartup(false);
+        schedulerFactoryBean.setGlobalTriggerListeners(triggerListener);
+        schedulerFactoryBean.setGlobalJobListeners(jobListener);
 
         return schedulerFactoryBean;
     }

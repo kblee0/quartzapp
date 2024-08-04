@@ -14,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 @SpringBootApplication
 @RequiredArgsConstructor
 public class QuartzApplication {
+	private final int QUARTZ_START_DELAY_SECODNDS = 3;
+
     private final SchedulerFactoryBean schedulerFactoryBean;
 	
 	public static void main(String[] args) {
@@ -24,14 +26,13 @@ public class QuartzApplication {
 	public void init() throws SchedulerException {
 		log.info("===========================================================");
 		log.info("- Application ready....");
-		log.info("- Starting scheduler...");
 		try {
-			schedulerFactoryBean.getScheduler().start();
+			schedulerFactoryBean.getScheduler().startDelayed(QUARTZ_START_DELAY_SECODNDS);
+			log.info("- Quartz scheduler will start in {} seconds....", QUARTZ_START_DELAY_SECODNDS);
 		} catch (SchedulerException e) {
 			log.error("Quartz scheduler start failed.", e);
-			schedulerFactoryBean.getScheduler().standby();
-			log.info("Qartz scheduler start with standby mode.");
+			throw e;
 		}
-		log.info("===========================================================");
+		log.info("-----------------------------------------------------------");
 	}
 }
