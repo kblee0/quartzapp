@@ -1,4 +1,4 @@
-package com.home.quartzapp.scheduler.util;
+package com.home.quartzapp.common.util;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.home.quartzapp.scheduler.util.DateTimeUtil;
+import com.home.quartzapp.common.util.DateTimeUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -58,18 +58,20 @@ public class SchedulerService {
             scheduler.addJob(jobDetail, true);
 
             Set<Trigger> currentTriggers = new HashSet<>(scheduler.getTriggersOfJob(jobDetail.getKey()));
-            String triggerState = null;
+            Trigger.TriggerState triggerState = Trigger.TriggerState.NONE;
 
             // Reschedule
             List<TriggerKey> delTriggers = new ArrayList<>();
             for(Trigger t : currentTriggers) {
+                if(scheduler.getTriggerState(t.getKey()) == Trigger.TriggerState.PAUSED) {
+                    triggerState = Trigger.TriggerState.PAUSED;
+                }
                 Trigger findTrigger = triggers.stream().filter(f -> f.getKey().equals(t.getKey())).findFirst().orElse(null);
                 if(findTrigger == null) {
                     delTriggers.add(t.getKey());
                 } else if(!findTrigger.getClass().equals(t.getClass())) {
-                    triggerState = scheduler.getTriggerState(t.getKey()).name();
                     scheduler.rescheduleJob(t.getKey(), findTrigger);
-                    if("PAUSED".equals(triggerState)) {
+                    if(triggerState == Trigger.TriggerState.PAUSED) {
                         scheduler.pauseTrigger(findTrigger.getKey());
                     }
                 }
@@ -82,11 +84,12 @@ public class SchedulerService {
                 Trigger findTrigger = currentTriggers.stream().filter(f -> f.getKey().equals(t.getKey())).findFirst().orElse(null);
                 if(findTrigger == null) {
                     scheduler.scheduleJob(t);
-                    if("PAUSED".equals(triggerState)) {
+                    if(triggerState == Trigger.TriggerState.PAUSED) {
                         scheduler.pauseTrigger(t.getKey());
                     }
                 }
             }
+            if(triggerState == Trigger.TriggerState.PAUSED) scheduler.pauseJob(jobDetail.getKey());
         } catch (SchedulerException e) {
             log.error("error occurred while scheduling with jobInfoDto : {}", jobInfoDto, e);
             throw ApiException.code("SCHE0004");
