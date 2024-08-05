@@ -26,6 +26,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final LoginUserDetailsService loginUserDetailsService;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     // Configuring HttpSecurity
     @Bean
@@ -34,12 +36,15 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/favicon.ico").permitAll())
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/api/v1/auth/token").permitAll())
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/api/v1/scheduler/**").authenticated())
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/error").permitAll())
                 // H2 Console
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/h2-console/**").permitAll())
                 .headers(headersConfigurer -> headersConfigurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(c ->
+                        c.authenticationEntryPoint(customAuthenticationEntryPoint).accessDeniedHandler(customAccessDeniedHandler))
                 .build();
     }
 

@@ -15,7 +15,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.format.Formatter;
 
-import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -75,29 +74,25 @@ public class DateTimeConfig {
         );
         javaTimeModule.addDeserializer(LocalDateTime.class, new JsonDeserializer<>() {
             @Override
-            public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt)
-                    throws IOException, JacksonException {
+            public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
                 return LocalDateTime.parse(p.getValueAsString(), DateTimeFormatter.ofPattern(DATETIME_FORMAT_STRING));
             }
         });
         javaTimeModule.addDeserializer(LocalDate.class, new JsonDeserializer<>() {
             @Override
-            public LocalDate deserialize(JsonParser p, DeserializationContext ctxt)
-                    throws IOException, JacksonException {
+            public LocalDate deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
                 return LocalDate.parse(p.getValueAsString(), DateTimeFormatter.ofPattern(DATE_FORMAT_STRING));
             }
         });
         javaTimeModule.addDeserializer(LocalTime.class, new JsonDeserializer<>() {
             @Override
-            public LocalTime deserialize(JsonParser p, DeserializationContext ctxt)
-                    throws IOException, JacksonException {
+            public LocalTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
                 return LocalTime.parse(p.getValueAsString(), DateTimeFormatter.ofPattern(TIME_FORMAT_STRING));
             }
         });
         javaTimeModule.addDeserializer(Date.class, new JsonDeserializer<>() {
             @Override
-            public Date deserialize(JsonParser p, DeserializationContext ctxt)
-                    throws IOException, JacksonException {
+            public Date deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
                 try {
                     return new SimpleDateFormat(DATETIME_FORMAT_STRING).parse(p.getValueAsString());
                 } catch (ParseException e) {

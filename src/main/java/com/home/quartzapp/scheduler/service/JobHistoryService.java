@@ -5,6 +5,7 @@ import java.io.StringWriter;
 import java.util.Date;
 
 import com.home.quartzapp.scheduler.entity.JobHistory;
+import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -21,14 +22,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@AllArgsConstructor
 public class JobHistoryService {
     private final JobHistoryRepository jobHistoryRepository;
     private final ModelMapper modelMapper;
-
-    public JobHistoryService(JobHistoryRepository jobHistoryRepository, ModelMapper modelMapper) {
-        this.jobHistoryRepository = jobHistoryRepository;
-        this.modelMapper = modelMapper;
-    }
+    private final ObjectMapper objectMapper;
 
     public void insertJobHistory(JobExecutionContext context) {
         JobHistoryDto jobHistoryDto = createJobHistory(context, JobStatus.STARTED);
@@ -56,7 +54,7 @@ public class JobHistoryService {
 
     private JobHistoryDto createJobHistory(JobExecutionContext context, JobStatus jobStatus) {
         JobHistoryDto jobHistoryDto = new JobHistoryDto();
-        ObjectMapper mapper = new ObjectMapper();
+        // ObjectMapper mapper = new ObjectMapper();
 
         try {
             jobHistoryDto.setSchedName(context.getScheduler().getSchedulerName());
@@ -67,7 +65,7 @@ public class JobHistoryService {
             jobHistoryDto.setJobGroup(context.getJobDetail().getKey().getGroup());
             jobHistoryDto.setStartTime(context.getFireTime());
             jobHistoryDto.setStatus(jobStatus.name());
-            jobHistoryDto.setJobData(mapper.writeValueAsString(context.getJobDetail().getJobDataMap()));
+            jobHistoryDto.setJobData(objectMapper.writeValueAsString(context.getJobDetail().getJobDataMap()));
         } catch (SchedulerException e) {
             log.error("createJobHistory :: {}", e.getMessage());
             return null;

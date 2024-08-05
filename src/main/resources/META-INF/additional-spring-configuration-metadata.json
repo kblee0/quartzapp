@@ -1,7 +1,7 @@
 {
   "properties": [
     {
-      "name": "jwt.exprirs-in-msec",
+      "name": "token-expires-in-seconds",
       "type": "java.lang.Integer",
       "description": "A description for 'jwt.exprirs-in-msec'"
     },

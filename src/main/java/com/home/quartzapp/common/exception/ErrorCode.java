@@ -33,7 +33,7 @@ public enum ErrorCode {
     CMNE0005("Unauthorized Request.", HttpStatus.UNAUTHORIZED),
     CMNE0006("Method not allowed.", HttpStatus.METHOD_NOT_ALLOWED),
     CMNE0007("Invalid parameter.", HttpStatus.BAD_REQUEST),
-    CMNE0008("Forbidden.", HttpStatus.FORBIDDEN),
+    CMNE0008("Access Denied.", HttpStatus.FORBIDDEN),
     CMNE9999("Unknown error (%s).", HttpStatus.INTERNAL_SERVER_ERROR);
 
 //    JOB_ALREADY_EXIST(HttpStatus.BAD_REQUEST, "ERR0001", "Job already exist"),
