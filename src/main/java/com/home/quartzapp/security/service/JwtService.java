@@ -11,12 +11,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -146,8 +148,18 @@ public class JwtService {
     public UsernamePasswordAuthenticationToken getAuthentication(String token) throws ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, IllegalArgumentException {
         Claims claims = this.extractAllClaims(token);
 
-        UserDetails userDetails = loginUserDetailsService.loadUserByUsername(claims.getSubject());
+        // LoginUserDetails userDetails = loginUserDetailsService.loadUserByUsername(claims.getSubject());
 
-        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        List<GrantedAuthority> authorities = ((List<String>)claims.get("role")).stream()
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
+
+        LoginUserDetails loginUserDetails1 = new LoginUserDetails();
+
+        loginUserDetails1.setUsername(claims.getSubject());
+        loginUserDetails1.setDisplayName((String)claims.get("displayName"));
+        loginUserDetails1.setAuthorities(authorities);
+
+        return new UsernamePasswordAuthenticationToken(loginUserDetails1, null, loginUserDetails1.getAuthorities());
     }
 }

@@ -2,6 +2,7 @@ package com.home.quartzapp.security.service;
 
 import com.home.quartzapp.security.entity.LoginUser;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
@@ -16,12 +17,13 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Slf4j
+@NoArgsConstructor
 public class LoginUserDetails implements UserDetails {
 
-    private final String username;
-    private final String password;
-    private final String displayName;
-    private final List<GrantedAuthority> authorities;
+    private String username;
+    private String password;
+    private String displayName;
+    private List<GrantedAuthority> authorities;
 
     public LoginUserDetails(LoginUser loginUser) {
         username = loginUser.getLoginId();
