@@ -34,7 +34,7 @@ public class CronJob extends QuartzJobBean {
 				}
 			});
 			log.info("CronJob ended :: jobKey : {} - {}", jobKey, currThread.getName());
-			log.info("============================================================================");
+			log.info("----------------------------------------------------------------------------");
 		}
 	}
 }

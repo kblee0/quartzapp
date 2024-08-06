@@ -8,6 +8,9 @@ import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +19,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 @Getter
@@ -24,15 +28,25 @@ public class JwtService {
     private final String secretKey;
     private final long expirationTimeSeconds;
     private final long refreshExpirationTimeSeconds;
+    private final LoginUserDetailsService loginUserDetailsService;
 
     public JwtService(
             @Value("${jwt.secret}")String secretKey,
             @Value("${jwt.expiration-time-seconds}")long expirationTimeSeconds,
-            @Value("${jwt.refresh-expiration-time-seconds}")long refreshExpirationTimeSeconds
-    ) {
+            @Value("${jwt.refresh-expiration-time-seconds}")long refreshExpirationTimeSeconds,
+            LoginUserDetailsService loginUserDetailsService) {
         this.secretKey = secretKey;
         this.expirationTimeSeconds = expirationTimeSeconds;
         this.refreshExpirationTimeSeconds = refreshExpirationTimeSeconds;
+        this.loginUserDetailsService = loginUserDetailsService;
+    }
+
+    public JwtTokenDto generateToken(Authentication authentication) {
+        Map<String, Object> claims = new HashMap<>();
+        LoginUserDetails userDetails = (LoginUserDetails) authentication.getPrincipal();
+        claims.put("role", authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toSet()));
+        claims.put("displayName", userDetails.getDisplayName());
+        return createToken(claims, authentication.getName());
     }
 
     public JwtTokenDto generateToken(String loginId) {
@@ -47,8 +61,8 @@ public class JwtService {
         long now = (new Date()).getTime();
 
         accessToken = Jwts.builder()
-                .setClaims(claims)
                 .setSubject(loginId)
+                .addClaims(claims)
                 .setIssuedAt(new Date(now))
                 .setExpiration(new Date(now + expirationTimeSeconds * 1000))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256).compact();
@@ -68,11 +82,11 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String extractUsername(String token) throws ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, SignatureException, IllegalArgumentException {
+    public String extractUsername(String token) throws ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, IllegalArgumentException {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public Date extractExpiration(String token)  throws ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, SignatureException, IllegalArgumentException {
+    public Date extractExpiration(String token)  throws ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, IllegalArgumentException {
         return extractClaim(token, Claims::getExpiration);
     }
 
@@ -109,7 +123,7 @@ public class JwtService {
                     .build()
                     .parseClaimsJws(token);
             return true;
-        } catch (io.jsonwebtoken.security.SignatureException | MalformedJwtException e) {
+        } catch (MalformedJwtException e) {
             log.debug("Invalid JWT Token. {}", e.getMessage());
         } catch(ExpiredJwtException e) {
             log.debug("Expired JWT Token. {}", e.getMessage());
@@ -127,5 +141,13 @@ public class JwtService {
         } catch (ExpiredJwtException e) {
             return e.getClaims();
         }
+    }
+
+    public UsernamePasswordAuthenticationToken getAuthentication(String token) throws ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, IllegalArgumentException {
+        Claims claims = this.extractAllClaims(token);
+
+        UserDetails userDetails = loginUserDetailsService.loadUserByUsername(claims.getSubject());
+
+        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
     }
 }
