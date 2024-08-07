@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
+
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
@@ -36,9 +38,10 @@ public class GlobalExceptionHandler {
         if (cause != null) {
             log.error(">> Cause: {}", cause);
         }
-        log.error(">> Exception: {}", e.getClass());
+        StringBuffer stackTrace = new StringBuffer();
+        Arrays.stream(e.getStackTrace()).limit(5).forEach(m -> stackTrace.append("\n\t").append(m));
+        log.error(">> Exception: {}{}", e.getClass(), stackTrace);
         log.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        e.printStackTrace();
 
         return ResponseEntity.status(apiException.getHttpStatus()).body(apiException.body());
     }
