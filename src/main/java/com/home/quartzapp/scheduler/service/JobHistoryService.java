@@ -54,7 +54,6 @@ public class JobHistoryService {
 
     private JobHistoryDto createJobHistory(JobExecutionContext context, JobStatus jobStatus) {
         JobHistoryDto jobHistoryDto = new JobHistoryDto();
-        // ObjectMapper mapper = new ObjectMapper();
 
         try {
             jobHistoryDto.setSchedName(context.getScheduler().getSchedulerName());
@@ -70,7 +69,7 @@ public class JobHistoryService {
             log.error("createJobHistory :: {}", e.getMessage());
             return null;
         } catch (JsonProcessingException e) {
-            log.error("jobDataMap writeValueAsString error :: jobDataMap: {}, {}",
+            log.error("jobDataMap writeValueAsString error :: jobDataMap: {}",
                 context.getJobDetail().getJobDataMap(), 
                 e);
         }

@@ -39,7 +39,9 @@ spring:
             threadCount: 5
 logging:
   level:
-    com.home.quartzapp.scheduler.repository: DEBUG
+    root: warn
+    org.quartz: debug
+    com.home.quartzapp.scheduler.repository: debug
 
 mybatis:
   mapper-locations: classpath:**/*.xml

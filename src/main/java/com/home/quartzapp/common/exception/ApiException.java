@@ -1,11 +1,20 @@
 package com.home.quartzapp.common.exception;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.home.quartzapp.common.util.ApplicationContextProvider;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+
+import java.io.IOException;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Getter
 @Setter
+@Slf4j
 public class ApiException extends RuntimeException {
     private String errorCode;
     private String errorMessage;
@@ -49,5 +58,20 @@ public class ApiException extends RuntimeException {
     }
     public static ApiException internalServerError(String errorCode, Object ...args) {
         return new ApiException(errorCode, HttpStatus.INTERNAL_SERVER_ERROR, args);
+    }
+
+    public void responseWrite(HttpServletResponse response) {
+        ObjectMapper objectMapper = ApplicationContextProvider.getBean("objectMapper", ObjectMapper.class);
+
+        response.setStatus(httpStatus.value());
+        response.setContentType(APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        try {
+            response.getWriter().write(objectMapper.writeValueAsString(body()));
+        } catch (IOException e) {
+            log.error("ApiException response IOException error :: {}", body());
+            log.error("IOException :: {}", e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 }

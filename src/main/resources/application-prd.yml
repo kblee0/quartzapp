@@ -19,4 +19,5 @@ spring:
       max-lifetime: 1800000
 jwt:
   secret: PbiQO0ltYWXbbUe48qo3L4DR1u2KeC4+DOQfiKyOEOU=
-  token-expires-in-seconds: 180
+  expiration-time-seconds: 3600
+  refresh-expiration-time-seconds: 86400

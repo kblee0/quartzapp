@@ -84,11 +84,11 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String extractUsername(String token) throws ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, IllegalArgumentException {
+    public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public Date extractExpiration(String token)  throws ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, IllegalArgumentException {
+    public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
@@ -145,7 +145,7 @@ public class JwtService {
         }
     }
 
-    public UsernamePasswordAuthenticationToken getAuthentication(String token) throws ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, IllegalArgumentException {
+    public UsernamePasswordAuthenticationToken getAuthentication(String token) {
         Claims claims = this.extractAllClaims(token);
 
         // LoginUserDetails userDetails = loginUserDetailsService.loadUserByUsername(claims.getSubject());
@@ -154,12 +154,12 @@ public class JwtService {
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
 
-        LoginUserDetails loginUserDetails1 = new LoginUserDetails();
+        LoginUserDetails loginUserDetails = new LoginUserDetails();
 
-        loginUserDetails1.setUsername(claims.getSubject());
-        loginUserDetails1.setDisplayName((String)claims.get("displayName"));
-        loginUserDetails1.setAuthorities(authorities);
+        loginUserDetails.setUsername(claims.getSubject());
+        loginUserDetails.setDisplayName((String)claims.get("displayName"));
+        loginUserDetails.setAuthorities(authorities);
 
-        return new UsernamePasswordAuthenticationToken(loginUserDetails1, null, loginUserDetails1.getAuthorities());
+        return new UsernamePasswordAuthenticationToken(loginUserDetails, null, loginUserDetails.getAuthorities());
     }
 }

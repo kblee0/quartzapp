@@ -41,25 +41,13 @@ public class JwtAuthFilter extends OncePerRequestFilter{
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch(ExpiredJwtException e) {
-                jwtExceptionHandler(response, ApiException.code("SCR0002"));
+                ApiException.code("SCR0002").responseWrite(response);
                 return;
             } catch (JwtException e) {
-                jwtExceptionHandler(response, ApiException.code("SCR0003"));
+                ApiException.code("SCR0003").responseWrite(response);
                 return;
             }
         }
         filterChain.doFilter(request, response);
-    }
-
-    // 토큰에 대한 오류가 발생했을 때, 커스터마이징해서 Exception 처리 값을 클라이언트에게 알려준다.
-    public void jwtExceptionHandler(HttpServletResponse response, ApiException error) {
-        response.setStatus(error.getHttpStatus().value());
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        try {
-            response.getWriter().write(objectMapper.writeValueAsString(error.body()));
-        } catch (Exception e) {
-            log.error(e.getMessage());
-        }
     }
 }

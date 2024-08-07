@@ -1,10 +1,9 @@
 package com.home.quartzapp.common.exception;
 
-import java.security.InvalidParameterException;
-
 import jakarta.validation.ConstraintViolationException;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,57 +14,31 @@ import lombok.extern.slf4j.Slf4j;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
-
-    @ExceptionHandler(ApiException.class)
-    protected ResponseEntity<?> handleApiException(ApiException e) {
-        log.error("handleApiException", e);
-
-        return ResponseEntity.status(e.getHttpStatus()).body(e.body());
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    protected ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        log.error("handleMethodArgumentNotValidException", e);
-
-        ApiException apiException = new ApiException("CMNE0002");
-
-        return ResponseEntity.status(apiException.getHttpStatus()).body(apiException.body());
-    }
-
-    @ExceptionHandler(ConstraintViolationException.class)
-    protected ResponseEntity<?> handleConstraintViolationException(ConstraintViolationException e) {
-        log.error("handleConstraintViolationException", e);
-
-        ApiException apiException = new ApiException("CMNE0002");
-
-        return ResponseEntity.status(apiException.getHttpStatus()).body(apiException.body());
-    }
-
-    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    protected ResponseEntity<?> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
-        log.error("handleHttpRequestMethodNotSupportedException", e);
-
-        ApiException apiException = new ApiException("CMNE0006");
-
-        return ResponseEntity.status(apiException.getHttpStatus()).body(apiException.body());
-    }
-
-    //@Valid 검증 실패 시 Catch
-    @ExceptionHandler({IllegalArgumentException.class,InvalidParameterException.class})
-    protected ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException e) {
-        log.error("handleIllegalArgumentException", e);
-
-        ApiException apiException = new ApiException("CMNE0007");
-
-        return ResponseEntity.status(apiException.getHttpStatus()).body(apiException.body());
-    }
-
     //모든 예외를 ApiError 형식으로 반환한다.
     @ExceptionHandler(Exception.class)
-    protected ResponseEntity<?> handleException(Exception e) {
-        log.error("handleException", e);
+    protected ResponseEntity<?> handleException(Throwable  e) {
+        String cause = null;
 
-        ApiException apiException = new ApiException("CMNE0001", e.getMessage());
+        ApiException apiException = switch (e) {
+            case ApiException ignore -> (ApiException)e;
+            case MethodArgumentNotValidException t -> { cause = t.getBody().toString();  yield  ApiException.code("CNME0002"); }
+            case ConstraintViolationException ignore -> ApiException.code("CMNE0002");
+            case HttpRequestMethodNotSupportedException ignore -> ApiException.code("CMNE0006");
+            //@Valid 검증 실패 시 Catch
+            case IllegalArgumentException ignored -> ApiException.code("CMNE0007");
+            //Role Check 오류
+            case AuthorizationDeniedException t -> { cause = t.getAuthorizationResult().toString(); yield  ApiException.code("CMNE0008"); }
+            default -> ApiException.code("CMNE0001", e.getMessage());
+        };
+        log.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        log.error(">> ErrorCode: {}", apiException.getErrorCode());
+        log.error(">> ErrorMessage: {}", apiException.getErrorMessage());
+        if (cause != null) {
+            log.error(">> Cause: {}", cause);
+        }
+        log.error(">> Exception: {}", e.getClass());
+        log.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        e.printStackTrace();
 
         return ResponseEntity.status(apiException.getHttpStatus()).body(apiException.body());
     }

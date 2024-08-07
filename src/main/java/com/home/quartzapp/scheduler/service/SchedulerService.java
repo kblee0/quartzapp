@@ -211,7 +211,7 @@ public class SchedulerService {
                     .group(jobDetail.getKey().getGroup())
                     .name(jobDetail.getKey().getName())
                     .description(jobDetail.getDescription())
-                    .jobClassName(jobDetail.getJobClass().getName())
+                    .jobClassName(jobDetail.getJobClass().equals(Job.class) ? "Unknown Class" : jobDetail.getJobClass().getName())
                     .interruptible(InterruptableJob.class.isAssignableFrom(jobDetail.getJobClass()))
                     .jobDataMap(jobDetail.getJobDataMap())
                     .triggers(new HashSet<>())

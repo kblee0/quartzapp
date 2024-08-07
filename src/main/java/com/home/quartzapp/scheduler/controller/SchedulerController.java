@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.quartz.JobKey;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,7 @@ import java.net.URI;
 public class SchedulerController {
     private final SchedulerService schedulerService;
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @RequestMapping(value = "/scheduler/jobs", method = RequestMethod.POST)
     public ResponseEntity<?> addJob(@Valid @RequestBody JobInfoDto jobInfoDto) {
         JobKey jobKey = new JobKey(jobInfoDto.getName(), jobInfoDto.getGroup());
@@ -39,6 +41,7 @@ public class SchedulerController {
         return ResponseEntity.created(URI.create("scheduler/jobs/" + jobKey.getGroup() + '/' + jobKey.getName())).body(jobStatusDto);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @RequestMapping(value = "/scheduler/jobs", method = RequestMethod.DELETE)
     public ResponseEntity<?> deleteJob(@RequestBody JobInfoDto jobInfoDto) {
         JobKey jobKey = new JobKey(jobInfoDto.getName(), jobInfoDto.getGroup());
@@ -52,6 +55,7 @@ public class SchedulerController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @RequestMapping(value = "/scheduler/jobs", method = RequestMethod.PUT)
     public ResponseEntity<?> updateJob(@RequestBody JobInfoDto jobInfoDto) {
         JobKey jobKey = new JobKey(jobInfoDto.getName(), jobInfoDto.getGroup());
