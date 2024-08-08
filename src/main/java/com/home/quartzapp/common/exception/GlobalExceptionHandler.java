@@ -39,7 +39,8 @@ public class GlobalExceptionHandler {
             log.error(">> Cause: {}", cause);
         }
         StringBuffer stackTrace = new StringBuffer();
-        Arrays.stream(e.getStackTrace()).limit(5).forEach(m -> stackTrace.append("\n\t").append(m));
+        Arrays.stream(e.getStackTrace()).limit(10).forEach(m -> stackTrace.append("\n\t").append(m));
+        if(!stackTrace.isEmpty()) stackTrace.append("\n\t...");
         log.error(">> Exception: {}{}", e.getClass(), stackTrace);
         log.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 

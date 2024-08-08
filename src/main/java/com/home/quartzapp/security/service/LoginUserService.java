@@ -59,7 +59,7 @@ public class LoginUserService {
             throw ApiException.code("SCR0004");
         }
 
-        Optional<LoginUser> loginUser = loginUserRepository.getLoginUser(loginRequestDto.getLoginId());
+        Optional<LoginUser> loginUser = loginUserRepository.findByLoginId(loginRequestDto.getLoginId());
 
         if(!loginUser.map(LoginUser::getRefreshToken).equals(refreshToken)) {
             throw ApiException.code("SCR0005");
@@ -67,15 +67,17 @@ public class LoginUserService {
 
         // Get Authentication
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        LoginUserDetails userDetails = loginUserDetailsService.loadUserByUsername(loginRequestDto.getLoginId());
+        LoginUserDetails loginUserDetails = loginUserDetailsService.loadUserByUsername(loginRequestDto.getLoginId());
 
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginUserDetails, null, loginUserDetails.getAuthorities());
         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
         return createJwtToken(authenticationToken);
     }
 
     private LoginResponseDto createJwtToken(Authentication authentication) {
+        LoginUserDetails loginUserDetails = (LoginUserDetails) authentication.getPrincipal();
+
         JwtTokenDto jwtTokenDto = jwtService.generateToken(authentication);
 
         LoginResponseDto loginResponseDto = LoginResponseDto.builder()
@@ -85,7 +87,7 @@ public class LoginUserService {
                 .tokenType(jwtTokenDto.getTokenType())
                 .build();
 
-        loginUserRepository.updateLoginUserRefreshToken(authentication.getName(), jwtTokenDto.getRefreshToken());
+        loginUserRepository.updateRefreshTokenByUserId(loginUserDetails.getUserId(), jwtTokenDto.getRefreshToken());
 
         return loginResponseDto;
     }

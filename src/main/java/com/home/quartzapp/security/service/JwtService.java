@@ -1,7 +1,13 @@
 package com.home.quartzapp.security.service;
 
 import com.home.quartzapp.security.dto.JwtTokenDto;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
@@ -12,7 +18,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -44,31 +49,22 @@ public class JwtService {
     }
 
     public JwtTokenDto generateToken(Authentication authentication) {
+        LoginUserDetails loginUserDetails = (LoginUserDetails) authentication.getPrincipal();
+
         Map<String, Object> claims = new HashMap<>();
-        LoginUserDetails userDetails = (LoginUserDetails) authentication.getPrincipal();
+        claims.put("loginId", loginUserDetails.getLoginId());
+        claims.put("displayName", loginUserDetails.getDisplayName());
         claims.put("role", authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toSet()));
-        claims.put("displayName", userDetails.getDisplayName());
-        return createToken(claims, authentication.getName());
-    }
-
-    public JwtTokenDto generateToken(String loginId) {
-        Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, loginId);
-    }
-
-    private JwtTokenDto createToken(Map<String, Object> claims, String loginId) {
-        String accessToken;
-        String refreshToken;
 
         long now = (new Date()).getTime();
 
-        accessToken = Jwts.builder()
-                .setSubject(loginId)
+        String accessToken = Jwts.builder()
+                .setSubject(loginUserDetails.getUserId())
                 .addClaims(claims)
                 .setIssuedAt(new Date(now))
                 .setExpiration(new Date(now + expirationTimeSeconds * 1000))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256).compact();
-        refreshToken = Jwts.builder()
+        String refreshToken = Jwts.builder()
                 .setExpiration(new Date(now + refreshExpirationTimeSeconds * 1000))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256).compact();
 
@@ -84,7 +80,7 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String extractUsername(String token) {
+    public String extractUserId(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
@@ -111,10 +107,10 @@ public class JwtService {
         return extractExpiration(token).before(new Date());
     }
 
-    public Boolean validateToken(String token, UserDetails userDetails) {
+    public Boolean validateToken(String token, LoginUserDetails loginUserDetails) {
         if(this.validateToken(token)) {
-            final String loginId = extractUsername(token);
-            return loginId.equals(userDetails.getUsername());
+            final String userId = extractUserId(token);
+            return userId.equals(loginUserDetails.getUserId());
         }
         return false;
     }
@@ -148,7 +144,7 @@ public class JwtService {
     public UsernamePasswordAuthenticationToken getAuthentication(String token) {
         Claims claims = this.extractAllClaims(token);
 
-        // LoginUserDetails userDetails = loginUserDetailsService.loadUserByUsername(claims.getSubject());
+        // LoginUserDetails loginUserDetails = loginUserDetailsService.loadUserByUsername(claims.getSubject());
 
         List<GrantedAuthority> authorities = ((List<String>)claims.get("role")).stream()
                 .map(SimpleGrantedAuthority::new)
@@ -156,7 +152,8 @@ public class JwtService {
 
         LoginUserDetails loginUserDetails = new LoginUserDetails();
 
-        loginUserDetails.setUsername(claims.getSubject());
+        loginUserDetails.setUserId(claims.getSubject());
+        loginUserDetails.setLoginId((String)claims.get("loginId"));
         loginUserDetails.setDisplayName((String)claims.get("displayName"));
         loginUserDetails.setAuthorities(authorities);
 

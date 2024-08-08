@@ -17,10 +17,16 @@ public class LoginUserDetailsService implements UserDetailsService {
     @Override
     public LoginUserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        Optional<LoginUser> userDetail = loginUserRepository.getLoginUser(username);
+        Optional<LoginUser> loginUser = loginUserRepository.findByLoginId(username);
 
-        // Converting userDetail to UserDetails
-        return userDetail.map(LoginUserDetails::new)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found ".concat(username)));
+        return loginUser.map(LoginUserDetails::new)
+                .orElseThrow(() -> new UsernameNotFoundException("LoginId not found ".concat(username)));
+    }
+    public LoginUserDetails loadUserByUserId(String userId) throws UsernameNotFoundException {
+
+        Optional<LoginUser> loginUser = loginUserRepository.findByUserId(userId);
+
+        return loginUser.map(LoginUserDetails::new)
+                .orElseThrow(() -> new UsernameNotFoundException("UserId not found ".concat(userId)));
     }
 }

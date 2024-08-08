@@ -1,6 +1,6 @@
 create table T_LOGIN_USER
 (
-    ID       BIGINT       not null,
+    USER_ID  VARCHAR(64)  not null,
     LOGIN_ID VARCHAR(255) not null,
     PASSWORD VARCHAR(255),
     NAME     VARCHAR(255),

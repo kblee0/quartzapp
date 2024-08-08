@@ -2,9 +2,9 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
                         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.home.quartzapp.security.repository.LoginUserRepository">
-	<select id="getLoginUser" resultType="com.home.quartzapp.security.entity.LoginUser">
+	<select id="findByLoginId" resultType="com.home.quartzapp.security.entity.LoginUser">
 		SELECT
-			ID,
+			USER_ID,
 			LOGIN_ID,
 			PASSWORD,
 			NAME,
@@ -14,9 +14,21 @@
 		FROM T_LOGIN_USER
 		WHERE LOGIN_ID = #{loginId}
 	</select>
-	<update id="updateLoginUserRefreshToken">
+	<select id="findByUserId" resultType="com.home.quartzapp.security.entity.LoginUser">
+		SELECT
+			USER_ID,
+			LOGIN_ID,
+			PASSWORD,
+			NAME,
+			EMAIL,
+			ROLES,
+			REFRESH_TOKEN
+		FROM T_LOGIN_USER
+		WHERE ID = #{Id}
+	</select>
+	<update id="updateRefreshTokenByUserId">
 		UPDATE T_LOGIN_USER
 		SET    REFRESH_TOKEN = #{refreshToken}
-		WHERE  LOGIN_ID = #{loginId}
+		WHERE  USER_ID = #{userId}
 	</update>
 </mapper>

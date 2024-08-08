@@ -1,7 +1,10 @@
 package com.home.quartzapp.jobs.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.quartz.*;
+import org.quartz.JobDataMap;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobKey;
+import org.quartz.TriggerKey;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
 import java.util.concurrent.TimeUnit;

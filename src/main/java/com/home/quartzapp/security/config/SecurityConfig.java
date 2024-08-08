@@ -2,10 +2,10 @@ package com.home.quartzapp.security.config;
 
 import com.home.quartzapp.security.service.LoginUserDetailsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -33,13 +33,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/favicon.ico").permitAll())
+                .authorizeHttpRequests(auth -> auth.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll())
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/api/v1/auth/token").permitAll())
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/api/v1/scheduler/**").authenticated())
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/error").permitAll())
                 // H2 Console
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/h2-console/**").permitAll())
+                .authorizeHttpRequests(auth -> auth.requestMatchers(PathRequest.toH2Console()).permitAll())
                 .headers(headersConfigurer -> headersConfigurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
+                // H2 Console
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
@@ -55,11 +56,11 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider(passwordEncoder());
 
         authenticationProvider.setUserDetailsService(loginUserDetailsService);
-        authenticationProvider.setPasswordEncoder(passwordEncoder());
+
         return authenticationProvider;
     }
 

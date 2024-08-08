@@ -11,7 +11,7 @@ public class ClassNotFoundIgnoringClassLoadHelper extends org.quartz.simpl.Casca
         try {
             return super.loadClass(name);
         } catch (ClassNotFoundException e) {
-            log.error("{} : Quartz job class not found. Load it into the Job.class.", name);
+            log.error("\"{}\" does not exist. Please edit the Job class name.", name);
             return Job.class;
         }
     }

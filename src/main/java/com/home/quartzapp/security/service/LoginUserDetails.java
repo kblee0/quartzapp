@@ -19,34 +19,36 @@ import java.util.stream.Collectors;
 @Slf4j
 @NoArgsConstructor
 public class LoginUserDetails implements UserDetails {
-
-    private String username;
+    private String userId;
+    private String loginId;
     private String password;
     private String displayName;
     private List<GrantedAuthority> authorities;
 
     public LoginUserDetails(LoginUser loginUser) {
-        username = loginUser.getLoginId();
-        password = loginUser.getPassword();
-        displayName = loginUser.getName();
-        authorities = Arrays.stream(loginUser.getRoles().split(","))
+        this.userId = loginUser.getUserId();
+        this.loginId = loginUser.getLoginId();
+        this.password = loginUser.getPassword();
+        this.displayName = loginUser.getName();
+        this.authorities = Arrays.stream(loginUser.getRoles().split(","))
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
+        return this.authorities;
     }
 
     @Override
     public String getPassword() {
-        return password;
+        return this.password;
     }
 
+    // Sping Security 전용
     @Override
     public String getUsername() {
-        return username;
+        return this.loginId;
     }
 
     @Override
