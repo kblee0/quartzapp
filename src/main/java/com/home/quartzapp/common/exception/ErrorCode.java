@@ -23,6 +23,7 @@ public enum ErrorCode {
     SCR0003("Rejected because the credentials are not configured properly.", HttpStatus.UNAUTHORIZED),
     SCR0004("Refresh token have expired.", HttpStatus.UNAUTHORIZED),
     SCR0005("Refresh token invalid.", HttpStatus.UNAUTHORIZED),
+    SCR0006("User authentication is invalid.", HttpStatus.UNAUTHORIZED),
 
 
     // Common Error

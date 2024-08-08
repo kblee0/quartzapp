@@ -18,7 +18,7 @@ import java.util.Arrays;
 public class GlobalExceptionHandler {
     //모든 예외를 ApiError 형식으로 반환한다.
     @ExceptionHandler(Exception.class)
-    protected ResponseEntity<?> handleException(Throwable  e) {
+    protected ResponseEntity<?> handleException(Exception  e) {
         String cause = null;
 
         ApiException apiException = switch (e) {

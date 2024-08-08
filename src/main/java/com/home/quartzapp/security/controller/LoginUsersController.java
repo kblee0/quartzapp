@@ -20,12 +20,10 @@ public class LoginUsersController {
     public ResponseEntity<?> userLogin(
             @RequestParam(value="grant_type") String grantType,
             @Valid @RequestBody LoginRequestDto loginRequestDto) {
-        if(grantType.equals("password")) {
-            return ResponseEntity.ok(loginUserService.userLogin(loginRequestDto));
-        }
-        else if(grantType.equals("refresh_token")) {
-            return ResponseEntity.ok(loginUserService.refreshLogin(loginRequestDto));
-        }
-        throw ApiException.code("CMNE0004");
+        return switch (grantType) {
+            case "password" -> ResponseEntity.ok(loginUserService.userLogin(loginRequestDto));
+            case "refresh_token" -> ResponseEntity.ok(loginUserService.refreshLogin(loginRequestDto));
+            default -> throw ApiException.code("CMNE0004");
+        };
     }
 }

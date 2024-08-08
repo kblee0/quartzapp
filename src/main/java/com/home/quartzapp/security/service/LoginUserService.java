@@ -8,9 +8,8 @@ import com.home.quartzapp.security.entity.LoginUser;
 import com.home.quartzapp.security.repository.LoginUserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -19,11 +18,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.security.auth.login.AccountLockedException;
 import java.util.Optional;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class LoginUserService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -39,11 +40,17 @@ public class LoginUserService {
         try {
             authenticationToken = (UsernamePasswordAuthenticationToken)authenticationManager.authenticate(authenticationToken);
         }
-        catch (BadCredentialsException | UsernameNotFoundException e) {
-            throw ApiException.code("SCR0001");
-        }
         catch (Exception e) {
-            throw ApiException.code("CMNE0001");
+            log.error("userLoing error :: loginId : {}, errorMessage: {}", loginRequestDto.getLoginId(), e.getMessage());
+            ApiException apiException = switch (e) {
+                case BadCredentialsException ignored -> ApiException.code("SCR0001");
+                case UsernameNotFoundException ignored -> ApiException.code("SCR0001");
+                case AccountLockedException ignored -> ApiException.code("SCR0006");
+                case AccountExpiredException ignored -> ApiException.code("SCR0006");
+                case DisabledException ignored -> ApiException.code("SCR0006");
+                default -> ApiException.code("CMNE0001");
+            };
+            throw apiException;
         }
 
         if(!authenticationToken.isAuthenticated()) throw ApiException.code("SCR0001");
@@ -68,6 +75,9 @@ public class LoginUserService {
         // Get Authentication
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         LoginUserDetails loginUserDetails = loginUserDetailsService.loadUserByUsername(loginRequestDto.getLoginId());
+        if(!loginUserDetails.isAccountNonExpired()||!loginUserDetails.isAccountNonLocked()||!loginUserDetails.isEnabled()) {
+            throw ApiException.code("SCR0006");
+        }
 
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginUserDetails, null, loginUserDetails.getAuthorities());
         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
