@@ -1,0 +1,124 @@
+# quartzapp
+###
+# @name Login - /auth/token
+< {%
+    let refreshToken = client.global.get("refreshToken")
+    if(refreshToken == undefined) refreshToken = ''
+    client.global.set("refreshToken", refreshToken)
+
+    request.variables.set("grantType", ["password", "refresh_token"])
+%}
+POST http://localhost:8080/api/v1/auth/token?
+    grant_type={{grantType}}
+Content-Type: application/json
+
+{
+  "loginId": "admin",
+  "password": "password",
+  "refreshToken": "{{refreshToken}}"
+}
+
+> {%
+    if(undefined !== response.body.accessToken) client.global.set("accessToken", response.body.accessToken);
+    if(undefined !== response.body.refreshToken) client.global.set("refreshToken", response.body.refreshToken);
+%}
+
+###
+# @name JobList - /scheduler/jobs
+//< {%
+    // TODO: Pre-request 핸들러를 여기에 추가할 수 있습니다
+//%}
+GET http://localhost:8080/api/v1/scheduler/jobs
+Authorization: Bearer {{accessToken}}
+#Authorization: Bearer {{token}}
+
+###
+# @name Add Job - /scheduler/jobs
+POST http://localhost:8080/api/v1/scheduler/jobs
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "group": "GRP001",
+  "name": "Job01",
+  "jobClassName": "com.home.quartzapp.jobs.service.CronJob",
+  "triggers": [
+    {
+      "name": "Job01-Trigger01",
+      "cronExpression": "0 0/4 * ? * *"
+    },
+    {
+      "name": "Job04 Trigger01",
+      "repeatIntervalInSeconds": 240
+    }
+  ]
+}
+
+###
+# @name Update Job - /scheduler/jobs
+PUT http://localhost:8080/api/v1/scheduler/jobs
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "group": "GRP001",
+  "name": "Job01",
+  "jobClassName": "com.home.quartzapp.jobs.service.CronJob",
+  "triggers": [
+    {
+      "name": "Job01-Trigger01",
+      "cronExpression": "0 0/30 * ? * *"
+    },
+    {
+      "name": "Job01-Trigger02",
+      "repeatIntervalInSeconds": 360,
+      "repeatCount": null
+    }
+  ]
+}
+
+###
+# @name Job State - /scheduler/jobs/GRP001/Job01
+//< {%
+    // TODO: Pre-request 핸들러를 여기에 추가할 수 있습니다
+//%}
+GET http://localhost:8080/api/v1/scheduler/jobs/GRP001/Job01
+Authorization: Bearer {{accessToken}}
+
+
+###
+# @name Command Job - /scheduler/jobs/GRP001/Job01/pasue
+//< {%
+    // TODO: Pre-request 핸들러를 여기에 추가할 수 있습니다
+//%}
+PATCH http://localhost:8080/api/v1/scheduler/jobs/GRP001/Job01?
+    command=pause
+Authorization: Bearer {{accessToken}}
+
+###
+PATCH http://localhost:8080/api/v1/scheduler/jobs/GRP001/Job01?
+    command=resume
+Authorization: Bearer {{accessToken}}
+
+###
+PATCH http://localhost:8080/api/v1/scheduler/jobs/GRP001/Job01?
+    command=interrupt
+Authorization: Bearer {{accessToken}}
+
+###
+PATCH http://localhost:8080/api/v1/scheduler/jobs/GRP001/Job01?
+    command=execute
+Authorization: Bearer {{accessToken}}
+
+
+###
+# @name Delete Job - /scheduler/jobs
+DELETE http://localhost:8080/api/v1/scheduler/jobs
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "group": "GRP001",
+  "name": "Job01"
+}
+
