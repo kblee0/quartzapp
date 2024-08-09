@@ -60,32 +60,38 @@ public class SchedulerService {
             // Reschedule
             List<TriggerKey> delTriggers = new ArrayList<>();
             for(Trigger t : currentTriggers) {
+                // Check whether the trigger state is Paused
                 if(scheduler.getTriggerState(t.getKey()) == Trigger.TriggerState.PAUSED) {
                     triggerState = Trigger.TriggerState.PAUSED;
                 }
                 Trigger findTrigger = triggers.stream().filter(f -> f.getKey().equals(t.getKey())).findFirst().orElse(null);
+                // Trigger for deletion if not in the new list or of a different type
                 if(findTrigger == null || !findTrigger.getClass().equals(t.getClass())) {
                     delTriggers.add(t.getKey());
                 } else {
+                    // Triggers of the same type change schedule
                     scheduler.rescheduleJob(t.getKey(), findTrigger);
+                    // Change the state if any of the existing triggers are in the PASUSED state.
                     if(triggerState == Trigger.TriggerState.PAUSED) {
                         scheduler.pauseTrigger(findTrigger.getKey());
                     }
                 }
             }
-            // Unscheduled
+            // Delete target trigger
             if(!delTriggers.isEmpty() ) scheduler.unscheduleJobs(delTriggers);
 
-            // Add Schedule
+            // Add new trigger
             for(Trigger t : triggers) {
                 Trigger findTrigger = currentTriggers.stream().filter(f -> f.getKey().equals(t.getKey())).findFirst().orElse(null);
                 if(findTrigger == null) {
                     scheduler.scheduleJob(t);
+                    // Change the state if any of the existing triggers are in the PASUSED state.
                     if(triggerState == Trigger.TriggerState.PAUSED) {
                         scheduler.pauseTrigger(t.getKey());
                     }
                 }
             }
+            // Change job status to prevent missing status changes
             if(triggerState == Trigger.TriggerState.PAUSED) scheduler.pauseJob(jobDetail.getKey());
         } catch (SchedulerException e) {
             log.error("error occurred while scheduling with jobInfoDto : {}", jobInfoDto, e);

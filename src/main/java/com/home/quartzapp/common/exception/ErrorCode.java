@@ -12,10 +12,10 @@ public enum ErrorCode {
     SCHE0001("Job already exist.", HttpStatus.BAD_REQUEST),
     SCHE0002("Job does not exist.", HttpStatus.NOT_FOUND),
     SCHE0003("Job class not found.", HttpStatus.BAD_REQUEST),
-    SCHE0004("Scheduler exception: %s", HttpStatus.INTERNAL_SERVER_ERROR),
+    SCHE0004("Scheduler error: %s", HttpStatus.INTERNAL_SERVER_ERROR),
     SCHE0005("It is not an interruptible job.", HttpStatus.BAD_REQUEST),
     SCHE0006("A job cannot be created as it is not a Quartz job class.", HttpStatus.BAD_REQUEST),
-    SCHE0007("Undefined Job command..", HttpStatus.BAD_REQUEST),
+    SCHE0007("Undefined Job command.", HttpStatus.BAD_REQUEST),
 
     // Security
     SCR0001("The login Id or password is incorrect.", HttpStatus.UNAUTHORIZED),
@@ -27,7 +27,7 @@ public enum ErrorCode {
 
 
     // Common Error
-    CMNE0001("Internal server error. %s", HttpStatus.INTERNAL_SERVER_ERROR),
+    CMNE0001("Internal server error: %s", HttpStatus.INTERNAL_SERVER_ERROR),
     CMNE0002("Request not valid.", HttpStatus.BAD_REQUEST),
     CMNE0003("Method not allowed.", HttpStatus.METHOD_NOT_ALLOWED),
     CMNE0004("Invalid parameter.", HttpStatus.BAD_REQUEST),
@@ -35,7 +35,7 @@ public enum ErrorCode {
     CMNE0006("Method not allowed.", HttpStatus.METHOD_NOT_ALLOWED),
     CMNE0007("Invalid parameter.", HttpStatus.BAD_REQUEST),
     CMNE0008("Access Denied.", HttpStatus.FORBIDDEN),
-    CMNE9999("Unknown error (%s).", HttpStatus.INTERNAL_SERVER_ERROR);
+    CMNE9999("Miscellaneous errors: %s", HttpStatus.INTERNAL_SERVER_ERROR);
 
 //    JOB_ALREADY_EXIST(HttpStatus.BAD_REQUEST, "ERR0001", "Job already exist"),
 //    JOB_DOES_NOT_EXIST(HttpStatus.BAD_REQUEST, "ERR0002", "Job does not exist"),

@@ -48,7 +48,7 @@ public class LoginUserService {
                 case AccountLockedException ignored -> ApiException.code("SCR0006");
                 case AccountExpiredException ignored -> ApiException.code("SCR0006");
                 case DisabledException ignored -> ApiException.code("SCR0006");
-                default -> ApiException.code("CMNE0001");
+                default -> ApiException.code("CMNE0001", e.getMessage());
             };
             throw apiException;
         }
