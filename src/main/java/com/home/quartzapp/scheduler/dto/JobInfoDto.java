@@ -16,8 +16,6 @@ import jakarta.validation.constraints.NotBlank;
 @NoArgsConstructor(force = true)
 @Builder
 public class JobInfoDto {
-    // JobDetail
-    @NotBlank(message = "Group name cannot be empty...")
     private final String group;
     @NotBlank
     private final String name;

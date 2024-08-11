@@ -2,8 +2,8 @@ package com.home.quartzapp.security.service;
 
 import com.home.quartzapp.common.exception.ApiException;
 import com.home.quartzapp.security.dto.JwtTokenDto;
-import com.home.quartzapp.security.dto.LoginRequestDto;
-import com.home.quartzapp.security.dto.LoginResponseDto;
+import com.home.quartzapp.security.dto.AuthTokenRequestDto;
+import com.home.quartzapp.security.dto.AuthTokenResponseDto;
 import com.home.quartzapp.security.entity.LoginUser;
 import com.home.quartzapp.security.repository.LoginUserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,24 +25,24 @@ import java.util.Optional;
 @Transactional
 @RequiredArgsConstructor
 @Slf4j
-public class LoginUserService {
+public class AuthTokenService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final LoginUserRepository loginUserRepository;
     private final LoginUserDetailsService loginUserDetailsService;
 
-    public LoginResponseDto userLogin(LoginRequestDto loginRequestDto) {
+    public AuthTokenResponseDto authTokenByPassword(AuthTokenRequestDto authTokenRequestDto) {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
 
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginRequestDto.getLoginId(), loginRequestDto.getPassword());
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(authTokenRequestDto.getLoginId(), authTokenRequestDto.getPassword());
         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
         try {
             authenticationToken = (UsernamePasswordAuthenticationToken)authenticationManager.authenticate(authenticationToken);
         }
         catch (Exception e) {
-            log.error("userLoing error :: loginId : {}, errorMessage: {}", loginRequestDto.getLoginId(), e.getMessage());
-            ApiException apiException = switch (e) {
+            log.error("userLoing error :: loginId : {}, errorMessage: {}", authTokenRequestDto.getLoginId(), e.getMessage());
+            throw switch (e) {
                 case BadCredentialsException ignored -> ApiException.code("SCR0001");
                 case UsernameNotFoundException ignored -> ApiException.code("SCR0001");
                 case AccountLockedException ignored -> ApiException.code("SCR0006");
@@ -50,7 +50,6 @@ public class LoginUserService {
                 case DisabledException ignored -> ApiException.code("SCR0006");
                 default -> ApiException.code("CMNE0001", e.getMessage());
             };
-            throw apiException;
         }
 
         if(!authenticationToken.isAuthenticated()) throw ApiException.code("SCR0001");
@@ -58,15 +57,15 @@ public class LoginUserService {
         return createJwtToken(authenticationToken);
     }
 
-    public LoginResponseDto refreshLogin(LoginRequestDto loginRequestDto) {
-        Optional<String> refreshToken = Optional.ofNullable(loginRequestDto.getRefreshToken());
+    public AuthTokenResponseDto authTokenByRefreshToken(AuthTokenRequestDto authTokenRequestDto) {
+        Optional<String> refreshToken = Optional.ofNullable(authTokenRequestDto.getRefreshToken());
 
         // Validate refresh token
         if(!jwtService.validateToken(refreshToken.orElse(""))) {
             throw ApiException.code("SCR0004");
         }
 
-        Optional<LoginUser> loginUser = loginUserRepository.findByLoginId(loginRequestDto.getLoginId());
+        Optional<LoginUser> loginUser = loginUserRepository.findByLoginId(authTokenRequestDto.getLoginId());
 
         if(!loginUser.map(LoginUser::getRefreshToken).equals(refreshToken)) {
             throw ApiException.code("SCR0005");
@@ -74,7 +73,7 @@ public class LoginUserService {
 
         // Get Authentication
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        LoginUserDetails loginUserDetails = loginUserDetailsService.loadUserByUsername(loginRequestDto.getLoginId());
+        LoginUserDetails loginUserDetails = loginUserDetailsService.loadUserByUsername(authTokenRequestDto.getLoginId());
         if(!loginUserDetails.isAccountNonExpired()||!loginUserDetails.isAccountNonLocked()||!loginUserDetails.isEnabled()) {
             throw ApiException.code("SCR0006");
         }
@@ -85,12 +84,12 @@ public class LoginUserService {
         return createJwtToken(authenticationToken);
     }
 
-    private LoginResponseDto createJwtToken(Authentication authentication) {
+    private AuthTokenResponseDto createJwtToken(Authentication authentication) {
         LoginUserDetails loginUserDetails = (LoginUserDetails) authentication.getPrincipal();
 
         JwtTokenDto jwtTokenDto = jwtService.generateToken(authentication);
 
-        LoginResponseDto loginResponseDto = LoginResponseDto.builder()
+        AuthTokenResponseDto authTokenResponseDto = AuthTokenResponseDto.builder()
                 .accessToken(jwtTokenDto.getAccessToken())
                 .refreshToken(jwtTokenDto.getRefreshToken())
                 .expiresIn(jwtTokenDto.getExpiresIn())
@@ -99,6 +98,6 @@ public class LoginUserService {
 
         loginUserRepository.updateRefreshTokenByUserId(loginUserDetails.getUserId(), jwtTokenDto.getRefreshToken());
 
-        return loginResponseDto;
+        return authTokenResponseDto;
     }
 }

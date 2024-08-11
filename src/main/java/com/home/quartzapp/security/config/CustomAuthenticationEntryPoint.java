@@ -20,9 +20,8 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
                          AuthenticationException authException) {
-        log.error("Not Authenticated Request", authException);
         log.error("Request URI: {}", request.getRequestURI());
 
-        ApiException.code("CMNE0005").responseWrite(response);
+        ApiException.code("CMNE0005").log(authException).responseWrite(response);
     }
 }

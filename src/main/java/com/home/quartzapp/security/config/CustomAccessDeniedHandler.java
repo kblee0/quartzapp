@@ -20,9 +20,8 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     public void handle(HttpServletRequest request,
                        HttpServletResponse response,
                        AccessDeniedException accessDeniedException) {
-        log.error("No Authorities", accessDeniedException);
         log.error("Request URI: {}", request.getRequestURI());
 
-        ApiException.code("CMNE0008").responseWrite(response);
+        ApiException.code("CMNE0008").log(accessDeniedException).responseWrite(response);
     }
 }

@@ -26,13 +26,13 @@ public class JobListener implements org.quartz.JobListener {
 
     @Override
     public void jobToBeExecuted(JobExecutionContext context) {
-        log.info("{} :: id: {}, jobToBeExecuted.", context.getJobDetail().getKey(), context.getFireInstanceId());
+        log.debug("{} :: id: {}, jobToBeExecuted.", context.getJobDetail().getKey(), context.getFireInstanceId());
         jobHistoryService.insertJobHistory(context);
     }
 
     @Override
     public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
-        log.info("{} :: id: {}, result: {}, jobWasExecuted.",
+        log.debug("{} :: id: {}, result: {}, jobWasExecuted.",
             context.getJobDetail().getKey(),
             context.getFireInstanceId(),
             jobException == null ? JobStatus.COMPLETED.name() : JobStatus.FAILED.name());

@@ -8,6 +8,11 @@ spring:
       path: /h2-console  # H2 Console의 Path
   datasource:
     driver-class-name: org.h2.Driver
-    url: jdbc:h2:./quartzapp-h2;DATABASE_TO_UPPER=TRUE;AUTO_SERVER=TRUE
+    url: jdbc:h2:/home/proj/quartz/quartzapp-h2;DATABASE_TO_UPPER=TRUE;AUTO_SERVER=TRUE
     username: sa
     password:
+
+logging:
+  level:
+    jdbc:
+      resultsettable: info

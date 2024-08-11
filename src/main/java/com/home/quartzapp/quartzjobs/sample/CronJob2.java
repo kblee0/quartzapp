@@ -1,4 +1,4 @@
-package com.home.quartzapp.jobs.service;
+package com.home.quartzapp.quartzjobs.sample;
 
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
@@ -31,5 +31,6 @@ public class CronJob2 implements Job {
 		});
 		log.info("CronJob ended :: jobKey : {} - {}", jobKey, currThread.getName());
 		log.info("============================================================================");
+
 	}
 }

@@ -1,4 +1,4 @@
-package com.home.quartzapp.jobs.service;
+package com.home.quartzapp.quartzjobs.sample;
 
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobExecutionContext;

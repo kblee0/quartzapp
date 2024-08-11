@@ -1,6 +1,8 @@
 package com.home.quartzapp.scheduler.service;
 
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import com.home.quartzapp.common.exception.ApiException;
@@ -10,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.quartz.*;
 import org.quartz.impl.matchers.GroupMatcher;
+import org.quartz.spi.OperableTrigger;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,25 +48,22 @@ public class SchedulerService {
     public JobStatusDto updateJob(JobInfoDto jobInfoDto) {
         JobDetail jobDetail = this.createJobDetail(jobInfoDto);
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
-
-
         Set<Trigger> triggers = new HashSet<>();
-        jobInfoDto.getTriggers().forEach(t -> triggers.add(this.createTrigger(jobDetail.getKey(),t)));
+
+        if(jobInfoDto.getTriggers()!=null) jobInfoDto.getTriggers().forEach(t -> triggers.add(this.createTrigger(jobDetail.getKey(),t)));
 
         try {
             // JobDetail Update
             scheduler.addJob(jobDetail, true);
 
             Set<Trigger> currentTriggers = new HashSet<>(scheduler.getTriggersOfJob(jobDetail.getKey()));
-            Trigger.TriggerState triggerState = Trigger.TriggerState.NONE;
+            HashSet<Trigger.TriggerState> triggerStates = new HashSet<>();
 
             // Reschedule
             List<TriggerKey> delTriggers = new ArrayList<>();
             for(Trigger t : currentTriggers) {
-                // Check whether the trigger state is Paused
-                if(scheduler.getTriggerState(t.getKey()) == Trigger.TriggerState.PAUSED) {
-                    triggerState = Trigger.TriggerState.PAUSED;
-                }
+                triggerStates.add(scheduler.getTriggerState(t.getKey()));
+
                 Trigger findTrigger = triggers.stream().filter(f -> f.getKey().equals(t.getKey())).findFirst().orElse(null);
                 // Trigger for deletion if not in the new list or of a different type
                 if(findTrigger == null || !findTrigger.getClass().equals(t.getClass())) {
@@ -72,7 +72,7 @@ public class SchedulerService {
                     // Triggers of the same type change schedule
                     scheduler.rescheduleJob(t.getKey(), findTrigger);
                     // Change the state if any of the existing triggers are in the PASUSED state.
-                    if(triggerState == Trigger.TriggerState.PAUSED) {
+                    if(triggerStates.contains(Trigger.TriggerState.PAUSED)) {
                         scheduler.pauseTrigger(findTrigger.getKey());
                     }
                 }
@@ -86,13 +86,13 @@ public class SchedulerService {
                 if(findTrigger == null) {
                     scheduler.scheduleJob(t);
                     // Change the state if any of the existing triggers are in the PASUSED state.
-                    if(triggerState == Trigger.TriggerState.PAUSED) {
+                    if(triggerStates.contains(Trigger.TriggerState.PAUSED)) {
                         scheduler.pauseTrigger(t.getKey());
                     }
                 }
             }
             // Change job status to prevent missing status changes
-            if(triggerState == Trigger.TriggerState.PAUSED) scheduler.pauseJob(jobDetail.getKey());
+            if(triggerStates.contains(Trigger.TriggerState.PAUSED)) scheduler.pauseJob(jobDetail.getKey());
         } catch (SchedulerException e) {
             log.error("error occurred while scheduling with jobInfoDto : {}", jobInfoDto, e);
             throw ApiException.code("SCHE0004", e.getMessage());
@@ -139,9 +139,10 @@ public class SchedulerService {
     }
 
     private Trigger createTrigger(JobKey jobKey, JobTriggerDto jobTriggerDto) {
+        StringBuilder triggerGroupName = new StringBuilder(jobKey.getGroup()).append(".").append(jobKey.getName());
         TriggerBuilder<Trigger> triggerBuilder = TriggerBuilder.newTrigger()
                 .forJob(jobKey)
-                .withIdentity(jobTriggerDto.getName() ,jobKey.getGroup())
+                .withIdentity(jobTriggerDto.getName(), triggerGroupName.toString())
                 .withDescription(jobTriggerDto.getDescription());
 
         if(jobTriggerDto.getStartTime() != null) {
@@ -203,6 +204,8 @@ public class SchedulerService {
     public JobStatusDto getJobStatus(JobKey jobKey) {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
 
+        HashSet<Trigger.TriggerState> jobTriggerStates = new HashSet<>();
+
         try {
             JobDetail jobDetail;
             JobInfoDto jobInfoDto;
@@ -254,16 +257,21 @@ public class SchedulerService {
                         }
                     }
                 }
-
-                jobStatusDto.setJobState(scheduler.getTriggerState(trigger.getKey()).name());
+                jobTriggerStates.add(scheduler.getTriggerState(trigger.getKey()));
 
                 jobInfoDto.getTriggers().add(triggerDto);
             }
             jobStatusDto.setJobInfoDto(jobInfoDto);
 
-            if(isJobRunning(jobKey)) {
-                jobStatusDto.setJobState("RUNNING");
-            }
+            if(jobTriggerStates.isEmpty()) jobStatusDto.setJobState(Trigger.TriggerState.NONE.name());
+            else if(jobTriggerStates.contains(Trigger.TriggerState.ERROR)) jobStatusDto.setJobState(Trigger.TriggerState.ERROR.name());
+            else if(jobTriggerStates.contains(Trigger.TriggerState.BLOCKED)) jobStatusDto.setJobState(Trigger.TriggerState.BLOCKED.name());
+            else if(jobTriggerStates.contains(Trigger.TriggerState.PAUSED)) jobStatusDto.setJobState(Trigger.TriggerState.PAUSED.name());
+            else if(jobTriggerStates.contains(Trigger.TriggerState.NORMAL)) jobStatusDto.setJobState(Trigger.TriggerState.NORMAL.name());
+            else jobStatusDto.setJobState(Trigger.TriggerState.NONE.name());
+
+            if(isJobRunning(jobKey)) jobStatusDto.setJobState("RUNNING");
+
             return jobStatusDto;
         } catch (SchedulerException e) {
             log.error("[schedulerdebug] error while fetching job info", e);
@@ -312,13 +320,15 @@ public class SchedulerService {
 
     public JobStatusDto executeJob(JobKey jobKey, JobDataMapDto jobDataMapDto) {
         try {
-            JobDataMap jobDataMap = Optional.ofNullable(jobDataMapDto).map(JobDataMapDto::getJobDataMap).orElse(null);
-            if(jobDataMap == null) {
-                schedulerFactoryBean.getScheduler().triggerJob(jobKey);
-            }
-            else {
-                schedulerFactoryBean.getScheduler().triggerJob(jobKey, jobDataMap);
-            }
+            JobTriggerDto jobTriggerDto = JobTriggerDto.builder()
+                    .name("@Onece-"+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss:SSS")))
+                    .repeatIntervalInSeconds(0)
+                    .repeatCount(0)
+                    .build();
+            OperableTrigger trigger = (OperableTrigger)createTrigger(jobKey, jobTriggerDto);
+            Optional.ofNullable(jobDataMapDto).map(JobDataMapDto::getJobDataMap).ifPresent(trigger::setJobDataMap);
+
+            schedulerFactoryBean.getScheduler().scheduleJob(trigger);
         } catch (SchedulerException e) {
             log.error("error occurred while execute job with jobKey : {}", jobKey, e);
             throw ApiException.code("SCHE0004", e.getMessage());

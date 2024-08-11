@@ -2,6 +2,7 @@ package com.home.quartzapp.security.config;
 
 import com.home.quartzapp.security.service.LoginUserDetailsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,18 +30,23 @@ public class SecurityConfig {
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
+    @Value("${spring.h2.console.enabled}")
+    private Boolean h2ConsoleEnabled;
+
     // Configuring HttpSecurity
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
+        if (h2ConsoleEnabled) {
+                http.authorizeHttpRequests(auth -> auth.requestMatchers(PathRequest.toH2Console()).permitAll())
+                        .headers(headersConfigurer -> headersConfigurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
+        }
         return http.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll())
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/v1/auth/token").permitAll())
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/v1/scheduler/**").authenticated())
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/error").permitAll())
-                // H2 Console
-                .authorizeHttpRequests(auth -> auth.requestMatchers(PathRequest.toH2Console()).permitAll())
-                .headers(headersConfigurer -> headersConfigurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-                // H2 Console
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+                        .requestMatchers("/api/v1/auth/token").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        .anyRequest().authenticated())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
