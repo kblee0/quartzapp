@@ -23,6 +23,7 @@ public class JobTriggerDto {
     // SimpleTrigger
     private Integer repeatIntervalInSeconds;
     private Integer repeatCount;    // -1: Unlimited, 0: One-time (zero repeat)
+    private Integer timesTriggered;
 
     // CronTrigger
     private String cronExpression;

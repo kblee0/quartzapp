@@ -237,6 +237,7 @@ public class SchedulerService {
                 if (trigger instanceof SimpleTrigger st) {
                     triggerDto.setRepeatIntervalInSeconds((int) (st.getRepeatInterval() / 1000));
                     triggerDto.setRepeatCount(st.getRepeatCount());
+                    triggerDto.setTimesTriggered(st.getTimesTriggered());
                 }
 
                 if(jobStatusDto.getLastFiredTime() == null) {
@@ -350,12 +351,19 @@ public class SchedulerService {
 
     public JobStatusDto resumeJob(JobKey jobKey) {
         try {
-            schedulerFactoryBean.getScheduler().resumeJob(jobKey);
+            Scheduler scheduler = schedulerFactoryBean.getScheduler();
+
+            scheduler.resumeJob(jobKey);
+
+            for(Trigger trigger : scheduler.getTriggersOfJob(jobKey)) {
+                if(Trigger.TriggerState.ERROR.equals(scheduler.getTriggerState(trigger.getKey()))){
+                    scheduler.resetTriggerFromErrorState(trigger.getKey());
+                }
+            }
         } catch (SchedulerException e) {
             log.error("error occurred while resume job with jobKey : {}", jobKey, e);
             throw ApiException.code("SCHE0004", e.getMessage());
         }
-
         return getJobStatus(jobKey);
     }
 
