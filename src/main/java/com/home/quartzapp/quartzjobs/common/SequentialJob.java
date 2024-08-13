@@ -61,8 +61,10 @@ public class SequentialJob extends QuartzJobBean {
 
         if(jobSequence.isEmpty()) log.warn("jobSequence is not defined : JobName: {}", jobName);
 
-        for(Object j : jobSequence) {
-            LinkedHashMap<String,?> jobData = (LinkedHashMap<String,?>)j;
+        for(Object jobObj : jobSequence) {
+            Object resultObj = context.getMergedJobDataMap().get("result");
+
+            LinkedHashMap<String,?> jobData = (LinkedHashMap<String,?>)jobObj;
             String jobClassName = jobData.get("jobClassName").toString();
 
             // JobDataMap change
@@ -74,18 +76,21 @@ public class SequentialJob extends QuartzJobBean {
                 context.getJobDetail().getJobDataMap().putAll(subJobDataMap);
                 context.getMergedJobDataMap().putAll(subJobDataMap);
             }
+            if(resultObj != null) {
+                context.getMergedJobDataMap().put("result", resultObj);
+            }
             log.info("{} || [SUB_JOB_EXEC] subJobClassName: {}, stopOnError = {}", jobName, jobClassName, stopOnError);
 
             try {
                 this.jobExecute(context, jobClassName);
-            } catch (Exception e) {
+            } catch (JobExecutionException e) {
                 ApiException ex = ApiException.code("SCHE0004").log(e);
                 if(stopOnError) throw ex;
             }
         }
         log.info("{} :: [JOB_FINISH]", jobName);
     }
-    private void jobExecute(JobExecutionContext context, String className ) {
+    private void jobExecute(JobExecutionContext context, String className ) throws JobExecutionException {
         Class<?> jobClass;
         Job jobInstance;
         try {
@@ -106,7 +111,7 @@ public class SequentialJob extends QuartzJobBean {
         try {
             jobInstance.execute(context);
         } catch (JobExecutionException e) {
-            throw new RuntimeException(e);
+            throw e;
         }
     }
 }

@@ -94,6 +94,7 @@ public class SchedulerController {
             case "pause" -> schedulerService.pauseJob(jobKey);
             case "resume" -> schedulerService.resumeJob(jobKey);
             case "interrupt" -> schedulerService.interruptJob(jobKey);
+            case "recover" -> schedulerService.recoverJob(jobKey);
             default -> throw ApiException.code("SCHE0007");
         };
         return ResponseEntity.ok(jobStatusDto);

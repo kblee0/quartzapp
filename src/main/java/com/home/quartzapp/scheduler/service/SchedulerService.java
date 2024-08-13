@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.quartz.*;
 import org.quartz.impl.jdbcjobstore.Constants;
 import org.quartz.impl.matchers.GroupMatcher;
-import org.quartz.spi.OperableTrigger;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +38,7 @@ public class SchedulerService {
 
             Set<Trigger> triggers = new HashSet<>();
             if(jobInfoDto.getTriggers() != null)
-                jobInfoDto.getTriggers().forEach(triggerDto -> triggers.add(this.createTrigger(jobDetail.getKey(), triggerDto)));
+                jobInfoDto.getTriggers().forEach(triggerDto -> triggers.add(this.createTrigger(jobDetail.getKey(), triggerDto, null)));
 
             scheduler.scheduleJob(jobDetail, triggers, false);
             log.debug("Job with jobKey : {} scheduled successfully.", jobDetail.getKey());
@@ -55,7 +54,7 @@ public class SchedulerService {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         Set<Trigger> triggers = new HashSet<>();
 
-        if(jobInfoDto.getTriggers()!=null) jobInfoDto.getTriggers().forEach(t -> triggers.add(this.createTrigger(jobDetail.getKey(),t)));
+        if(jobInfoDto.getTriggers()!=null) jobInfoDto.getTriggers().forEach(t -> triggers.add(this.createTrigger(jobDetail.getKey(),t,null)));
 
         try {
             // JobDetail Update
@@ -143,12 +142,15 @@ public class SchedulerService {
         }
     }
 
-    private Trigger createTrigger(JobKey jobKey, JobTriggerDto jobTriggerDto) {
+    private Trigger createTrigger(JobKey jobKey, JobTriggerDto jobTriggerDto, JobDataMap jobDataMap) {
         TriggerBuilder<Trigger> triggerBuilder = TriggerBuilder.newTrigger()
                 .forJob(jobKey)
                 .withIdentity(jobTriggerDto.getName(), this.getTriggerGroup(jobKey))
                 .withDescription(jobTriggerDto.getDescription());
 
+        if(jobDataMap != null) {
+            triggerBuilder.usingJobData(jobDataMap);
+        }
         if(jobTriggerDto.getStartTime() != null) {
             triggerBuilder.startAt(DateTimeUtil.toDate(jobTriggerDto.getStartTime()));
         }
@@ -168,10 +170,9 @@ public class SchedulerService {
             return triggerBuilder
                     .withSchedule(
                         CronScheduleBuilder
-                            .cronSchedule(jobCronTriggerDto.getCronExpression())
-                            .withMisfireHandlingInstructionDoNothing()
-                            )
-                    .build();
+                                .cronSchedule(jobCronTriggerDto.getCronExpression())
+                                .withMisfireHandlingInstructionDoNothing()
+                    ).build();
         } else {
             JobSimpleTriggerDto jobSimpleTriggerDto = (JobSimpleTriggerDto) jobTriggerDto;
             // * SimpleTrigger misfire policy - limit count
@@ -194,11 +195,10 @@ public class SchedulerService {
             return triggerBuilder
                     .withSchedule(
                         SimpleScheduleBuilder
-                            .repeatSecondlyForever(jobSimpleTriggerDto.getRepeatIntervalInSeconds())
-                            .withRepeatCount(Optional.ofNullable(jobSimpleTriggerDto.getRepeatCount()).orElse(-1))
-                            .withMisfireHandlingInstructionNowWithRemainingCount()
-                            )
-                    .build();
+                                .repeatSecondlyForever(jobSimpleTriggerDto.getRepeatIntervalInSeconds())
+                                .withRepeatCount(Optional.ofNullable(jobSimpleTriggerDto.getRepeatCount()).orElse(-1))
+                                .withMisfireHandlingInstructionIgnoreMisfires()
+                            ).build();
         }
     }
 
@@ -330,8 +330,7 @@ public class SchedulerService {
                     .repeatIntervalInSeconds(0)
                     .repeatCount(0)
                     .build();
-            OperableTrigger trigger = (OperableTrigger)createTrigger(jobKey, jobTriggerDto);
-            Optional.ofNullable(jobDataMapDto).map(JobDataMapDto::getJobDataMap).ifPresent(trigger::setJobDataMap);
+            SimpleTrigger trigger = (SimpleTrigger)createTrigger(jobKey, jobTriggerDto, jobDataMapDto.getJobDataMap());
 
             schedulerFactoryBean.getScheduler().scheduleJob(trigger);
         } catch (SchedulerException e) {
@@ -358,18 +357,32 @@ public class SchedulerService {
             Scheduler scheduler = schedulerFactoryBean.getScheduler();
 
             scheduler.resumeJob(jobKey);
+        } catch (SchedulerException e) {
+            log.error("error occurred while resume job with jobKey : {}", jobKey, e);
+            throw ApiException.code("SCHE0004", e.getMessage());
+        }
+        return getJobStatus(jobKey);
+    }
 
+    public JobStatusDto recoverJob(JobKey jobKey) {
+        Scheduler scheduler = schedulerFactoryBean.getScheduler();
+
+        try {
             for(Trigger trigger : scheduler.getTriggersOfJob(jobKey)) {
                 if(Trigger.TriggerState.ERROR.equals(scheduler.getTriggerState(trigger.getKey()))){
-                    scheduler.resetTriggerFromErrorState(trigger.getKey());
-                }
-                if(Trigger.TriggerState.BLOCKED.equals(scheduler.getTriggerState(trigger.getKey()))){
+                    if(trigger instanceof SimpleTrigger simpleTrigger) {
+                        if(simpleTrigger.getRepeatCount() == 0 && simpleTrigger.getTimesTriggered() > 0) {
+                            log.warn("Delete a trigger that is executed only once and has an error status :: JobGrup: {}, JobName: {}, TriggerName: {}",
+                                    trigger.getJobKey().getGroup(), trigger.getJobKey().getName(), trigger.getKey().getName());
+                            scheduler.unscheduleJob(trigger.getKey());
+                            continue;
+                        }
+                    }
                     scheduler.resetTriggerFromErrorState(trigger.getKey());
                 }
             }
         } catch (SchedulerException e) {
-            log.error("error occurred while resume job with jobKey : {}", jobKey, e);
-            throw ApiException.code("SCHE0004", e.getMessage());
+            throw new RuntimeException(e);
         }
         return getJobStatus(jobKey);
     }
