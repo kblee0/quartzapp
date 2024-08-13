@@ -2,8 +2,9 @@ package com.home.quartzapp.scheduler.service;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Date;
+import java.time.LocalDateTime;
 
+import com.home.quartzapp.common.util.DateTimeUtil;
 import com.home.quartzapp.scheduler.entity.JobHistory;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -37,7 +38,7 @@ public class JobHistoryService {
     public void updateJobHistory(JobExecutionContext context, JobExecutionException jobException) {
         JobHistoryDto jobHistoryDto = createJobHistory(context, JobStatus.COMPLETED);
 
-        jobHistoryDto.setEndTime(new Date());
+        jobHistoryDto.setEndTime(LocalDateTime.now());
 
         if(jobException != null) {
             StringWriter stringWriter = new StringWriter();
@@ -62,7 +63,7 @@ public class JobHistoryService {
             jobHistoryDto.setTriggerGroup(context.getTrigger().getKey().getGroup());
             jobHistoryDto.setJobName(context.getJobDetail().getKey().getName());
             jobHistoryDto.setJobGroup(context.getJobDetail().getKey().getGroup());
-            jobHistoryDto.setStartTime(context.getFireTime());
+            jobHistoryDto.setStartTime(DateTimeUtil.toLocalDateTime(context.getFireTime()));
             jobHistoryDto.setStatus(jobStatus.name());
             jobHistoryDto.setJobData(objectMapper.writeValueAsString(context.getJobDetail().getJobDataMap()));
         } catch (SchedulerException e) {

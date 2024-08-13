@@ -12,11 +12,13 @@ import org.quartz.*;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
-@Slf4j
 @Getter
 @Setter
 @DisallowConcurrentExecution
+@Component
+@Slf4j
 public class CommandJob extends QuartzJobBean implements InterruptableJob {
     private volatile boolean isJobInterrupted = false;
     private Process shellProcess = null;
@@ -37,7 +39,7 @@ public class CommandJob extends QuartzJobBean implements InterruptableJob {
         boolean outputToLog = jobDataMap.getBooleanValue("outputToLog");
         String charsetName = jobDataMap.getString("charsetName");
 
-        int exitCode = -1;
+        int exitCode;
         try {
             exitCode = processBuilder(context, cwd, command, outputToLog, charsetName);
             log.info("{} :: exitCode: {}", jobName, exitCode);

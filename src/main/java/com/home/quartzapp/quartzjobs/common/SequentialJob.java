@@ -79,8 +79,8 @@ public class SequentialJob extends QuartzJobBean {
             try {
                 this.jobExecute(context, jobClassName);
             } catch (Exception e) {
-                if(stopOnError) throw e;
-                ApiException.code("SCHE0004").log(e);
+                ApiException ex = ApiException.code("SCHE0004").log(e);
+                if(stopOnError) throw ex;
             }
         }
         log.info("{} :: [JOB_FINISH]", jobName);

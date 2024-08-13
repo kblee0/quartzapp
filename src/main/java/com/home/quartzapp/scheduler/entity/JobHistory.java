@@ -2,6 +2,7 @@ package com.home.quartzapp.scheduler.entity;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
@@ -13,8 +14,8 @@ public class JobHistory {
     String jobName;
     String jobGroup;
     String jobData;
-    Date startTime;
-    Date endTime;
+    LocalDateTime startTime;
+    LocalDateTime endTime;
     String status;
     String exitMessage;
 }

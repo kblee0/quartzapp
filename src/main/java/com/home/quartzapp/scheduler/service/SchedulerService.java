@@ -11,6 +11,7 @@ import com.home.quartzapp.scheduler.dto.*;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.quartz.*;
+import org.quartz.impl.jdbcjobstore.Constants;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.spi.OperableTrigger;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
@@ -26,6 +27,11 @@ import static org.quartz.CronExpression.isValidExpression;
 @ExecuteInJTATransaction
 public class SchedulerService {
     private final SchedulerFactoryBean schedulerFactoryBean;
+
+    private String getTriggerGroup(JobKey jobKey) {
+        StringBuilder triggerGroupName = new StringBuilder(jobKey.getGroup()).append(".").append(jobKey.getName());
+        return triggerGroupName.toString();
+    }
 
     public JobStatusDto addJob(JobInfoDto jobInfoDto) {
         try {
@@ -139,10 +145,9 @@ public class SchedulerService {
     }
 
     private Trigger createTrigger(JobKey jobKey, JobTriggerDto jobTriggerDto) {
-        StringBuilder triggerGroupName = new StringBuilder(jobKey.getGroup()).append(".").append(jobKey.getName());
         TriggerBuilder<Trigger> triggerBuilder = TriggerBuilder.newTrigger()
                 .forJob(jobKey)
-                .withIdentity(jobTriggerDto.getName(), triggerGroupName.toString())
+                .withIdentity(jobTriggerDto.getName(), this.getTriggerGroup(jobKey))
                 .withDescription(jobTriggerDto.getDescription());
 
         if(jobTriggerDto.getStartTime() != null) {
@@ -154,11 +159,9 @@ public class SchedulerService {
             triggerBuilder.endAt(endAt);
         }
 
-        String cronExpression = jobTriggerDto.getCronExpression();
-
-        if (StringUtils.hasText(jobTriggerDto.getCronExpression())) {
-            if (!isValidExpression(cronExpression)) {
-                throw new IllegalArgumentException("Provided expression " + cronExpression + " is not a valid cron expression");
+        if(jobTriggerDto instanceof JobCronTriggerDto jobCronTriggerDto) {
+            if (!isValidExpression(jobCronTriggerDto.getCronExpression())) {
+                throw new IllegalArgumentException("Provided expression " + jobCronTriggerDto.getCronExpression() + " is not a valid cron expression");
             }
             // * CronTrigger misfire policy
             // - Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY 모두 실행
@@ -168,11 +171,12 @@ public class SchedulerService {
             return triggerBuilder
                     .withSchedule(
                         CronScheduleBuilder
-                            .cronSchedule(cronExpression)
+                            .cronSchedule(jobCronTriggerDto.getCronExpression())
                             .withMisfireHandlingInstructionDoNothing()
                             )
                     .build();
         } else {
+            JobSimpleTriggerDto jobSimpleTriggerDto = (JobSimpleTriggerDto) jobTriggerDto;
             // * SimpleTrigger misfire policy - limit count
             // - Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY 실행가능 상태가 되는대로 job을 실행함.
             // - Trigger.MISFIRE_INSTRUCTION_SMART_POLICY 실행가능 상태가 되는대로 job을 실행함. now existing(nothing) 과 같음.
@@ -193,8 +197,8 @@ public class SchedulerService {
             return triggerBuilder
                     .withSchedule(
                         SimpleScheduleBuilder
-                            .repeatSecondlyForever(jobTriggerDto.getRepeatIntervalInSeconds())
-                            .withRepeatCount(Optional.ofNullable(jobTriggerDto.getRepeatCount()).orElse(-1))
+                            .repeatSecondlyForever(jobSimpleTriggerDto.getRepeatIntervalInSeconds())
+                            .withRepeatCount(Optional.ofNullable(jobSimpleTriggerDto.getRepeatCount()).orElse(-1))
                             .withMisfireHandlingInstructionNowWithRemainingCount()
                             )
                     .build();
@@ -224,43 +228,12 @@ public class SchedulerService {
                     .build();
 
             for(Trigger trigger : scheduler.getTriggersOfJob(jobKey)) {
-                JobTriggerDto triggerDto = JobTriggerDto.builder()
-                        .name(trigger.getKey().getName())
-                        .description(trigger.getDescription())
-                        .startTime(DateTimeUtil.toLocalDateTime(trigger.getStartTime()))
-                        .endTime(DateTimeUtil.toLocalDateTime(trigger.getEndTime()))
-                        .state(scheduler.getTriggerState(trigger.getKey()).name())
-                        .build();
-                if (trigger instanceof CronTrigger ct) {
-                    triggerDto.setCronExpression(ct.getCronExpression());
-                }
-                if (trigger instanceof SimpleTrigger st) {
-                    triggerDto.setRepeatIntervalInSeconds((int) (st.getRepeatInterval() / 1000));
-                    triggerDto.setRepeatCount(st.getRepeatCount());
-                    triggerDto.setTimesTriggered(st.getTimesTriggered());
-                }
+                jobStatusDto.setLastFiredTime(DateTimeUtil.max(jobStatusDto.getLastFiredTime(), DateTimeUtil.toLocalDateTime(trigger.getPreviousFireTime())));
+                jobStatusDto.setNextFireTime(DateTimeUtil.min(jobStatusDto.getNextFireTime(), DateTimeUtil.toLocalDateTime(trigger.getNextFireTime())));
 
-                if(jobStatusDto.getLastFiredTime() == null) {
-                    jobStatusDto.setLastFiredTime(DateTimeUtil.toLocalDateTime(trigger.getPreviousFireTime()));
-                } else {
-                    if(trigger.getPreviousFireTime() != null) {
-                        if(trigger.getPreviousFireTime().after(DateTimeUtil.toDate(jobStatusDto.getLastFiredTime()))) {
-                            jobStatusDto.setLastFiredTime(DateTimeUtil.toLocalDateTime(trigger.getPreviousFireTime()));
-                        }
-                    }
-                }
-                if(jobStatusDto.getNextFireTime() == null) {
-                    jobStatusDto.setNextFireTime(DateTimeUtil.toLocalDateTime(trigger.getNextFireTime()));
-                } else {
-                    if(trigger.getNextFireTime() != null) {
-                        if(trigger.getNextFireTime().before(DateTimeUtil.toDate(jobStatusDto.getNextFireTime()))) {
-                            jobStatusDto.setNextFireTime(DateTimeUtil.toLocalDateTime(trigger.getNextFireTime()));
-                        }
-                    }
-                }
                 jobTriggerStates.add(scheduler.getTriggerState(trigger.getKey()));
 
-                jobInfoDto.getTriggers().add(triggerDto);
+                jobInfoDto.getTriggers().add(this.createJobTriggerDto(trigger));
             }
             jobStatusDto.setJobInfoDto(jobInfoDto);
 
@@ -277,6 +250,38 @@ public class SchedulerService {
         } catch (SchedulerException e) {
             log.error("[schedulerdebug] error while fetching job info", e);
             throw ApiException.code("SCHE0004", e.getMessage());
+        }
+    }
+
+    private JobTriggerDto createJobTriggerDto(Trigger trigger) throws SchedulerException {
+        Scheduler scheduler = schedulerFactoryBean.getScheduler();
+        if (trigger instanceof CronTrigger cronTrigger) {
+            return JobCronTriggerDto.builder()
+                    .type(Constants.TTYPE_CRON)
+                    .group(trigger.getKey().getGroup())
+                    .name(trigger.getKey().getName())
+                    .description(trigger.getDescription())
+                    .startTime(DateTimeUtil.toLocalDateTime(trigger.getStartTime()))
+                    .endTime(DateTimeUtil.toLocalDateTime(trigger.getEndTime()))
+                    .state(scheduler.getTriggerState(trigger.getKey()).name())
+                    .cronExpression(cronTrigger.getCronExpression())
+                    .build();
+        }
+        else {
+            SimpleTrigger simpleTrigger = (SimpleTrigger)trigger;
+
+            return JobSimpleTriggerDto.builder()
+                    .type(Constants.TTYPE_SIMPLE)
+                    .group(trigger.getKey().getGroup())
+                    .name(trigger.getKey().getName())
+                    .description(trigger.getDescription())
+                    .startTime(DateTimeUtil.toLocalDateTime(trigger.getStartTime()))
+                    .endTime(DateTimeUtil.toLocalDateTime(trigger.getEndTime()))
+                    .state(scheduler.getTriggerState(trigger.getKey()).name())
+                    .repeatIntervalInSeconds((int) (simpleTrigger.getRepeatInterval() / 1000))
+                    .repeatCount(simpleTrigger.getRepeatCount())
+                    .timesTriggered(simpleTrigger.getTimesTriggered())
+                    .build();
         }
     }
 
@@ -321,7 +326,9 @@ public class SchedulerService {
 
     public JobStatusDto executeJob(JobKey jobKey, JobDataMapDto jobDataMapDto) {
         try {
-            JobTriggerDto jobTriggerDto = JobTriggerDto.builder()
+            JobSimpleTriggerDto jobTriggerDto = JobSimpleTriggerDto.builder()
+                    .type(Constants.TTYPE_SIMPLE)
+                    .group(this.getTriggerGroup(jobKey))
                     .name("@Onece-"+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss:SSS")))
                     .repeatIntervalInSeconds(0)
                     .repeatCount(0)
@@ -357,6 +364,9 @@ public class SchedulerService {
 
             for(Trigger trigger : scheduler.getTriggersOfJob(jobKey)) {
                 if(Trigger.TriggerState.ERROR.equals(scheduler.getTriggerState(trigger.getKey()))){
+                    scheduler.resetTriggerFromErrorState(trigger.getKey());
+                }
+                if(Trigger.TriggerState.BLOCKED.equals(scheduler.getTriggerState(trigger.getKey()))){
                     scheduler.resetTriggerFromErrorState(trigger.getKey());
                 }
             }

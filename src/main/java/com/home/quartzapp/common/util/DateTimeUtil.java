@@ -18,4 +18,16 @@ public class DateTimeUtil {
     public static LocalDate toLocalDate(Date dt) {
         return dt == null ? null : LocalDate.ofInstant(dt.toInstant(), ZoneId.systemDefault());
     }
+    public static <T> T max(T t1, T t2) {
+        if(t1 == null) return t2;
+        if(t2 == null) return t1;
+
+        return ((Comparable<T>)t1).compareTo(t2) > 0 ? t1 : t2;
+    }
+    public static <T> T min(T t1, T t2) {
+        if(t1 == null) return t2;
+        if(t2 == null) return t1;
+
+        return ((Comparable<T>)t1).compareTo(t2) > 0 ? t2 : t1;
+    }
 }

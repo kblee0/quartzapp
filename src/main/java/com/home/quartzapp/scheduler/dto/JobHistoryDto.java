@@ -1,6 +1,6 @@
 package com.home.quartzapp.scheduler.dto;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import lombok.Data;
 
@@ -13,8 +13,8 @@ public class JobHistoryDto {
     String jobName;
     String jobGroup;
     String jobData;
-    Date startTime;
-    Date endTime;
+    LocalDateTime startTime;
+    LocalDateTime endTime;
     String status;
     String exitMessage;
 }
