@@ -1,7 +1,6 @@
 package com.home.quartzapp.scheduler.service;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -151,12 +150,10 @@ public class SchedulerService {
                 .withDescription(jobTriggerDto.getDescription());
 
         if(jobTriggerDto.getStartTime() != null) {
-            Date startAt = Date.from(jobTriggerDto.getStartTime().atZone(ZoneId.systemDefault()).toInstant());
-            triggerBuilder.startAt(startAt);
+            triggerBuilder.startAt(DateTimeUtil.toDate(jobTriggerDto.getStartTime()));
         }
         if(jobTriggerDto.getEndTime() != null) {
-            Date endAt = Date.from(jobTriggerDto.getEndTime().atZone(ZoneId.systemDefault()).toInstant());
-            triggerBuilder.endAt(endAt);
+            triggerBuilder.endAt(DateTimeUtil.toDate(jobTriggerDto.getEndTime()));
         }
 
         if(jobTriggerDto instanceof JobCronTriggerDto jobCronTriggerDto) {
