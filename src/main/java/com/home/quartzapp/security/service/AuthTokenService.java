@@ -41,7 +41,7 @@ public class AuthTokenService {
             authenticationToken = (UsernamePasswordAuthenticationToken)authenticationManager.authenticate(authenticationToken);
         }
         catch (Exception e) {
-            log.error("userLoing error :: loginId : {}, errorMessage: {}", authTokenRequestDto.getLoginId(), e.getMessage());
+            log.error("authTokenByPassword error :: loginId : {}", authTokenRequestDto.getLoginId());
             throw switch (e) {
                 case BadCredentialsException ignored -> ApiException.code("SCR0001");
                 case UsernameNotFoundException ignored -> ApiException.code("SCR0001");

@@ -45,7 +45,7 @@ public class LoginUserDetails implements UserDetails {
         return this.password;
     }
 
-    // Sping Security 전용
+    // Spring Security 전용
     @Override
     public String getUsername() {
         return this.loginId;

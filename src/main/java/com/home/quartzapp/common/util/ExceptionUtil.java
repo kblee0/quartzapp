@@ -21,7 +21,9 @@ public class ExceptionUtil {
     public static String getCause(Exception e) {
         if(e == null) return null;
 
-        String cause = switch (e) {
+        //@Valid 검증 실패 시 Catch
+        //Role Check 오류
+        return switch (e) {
             case MethodArgumentNotValidException t -> t.getBody().toString();
             case ConstraintViolationException ignore -> null;
             case HttpRequestMethodNotSupportedException ignore -> null;
@@ -31,6 +33,5 @@ public class ExceptionUtil {
             case AuthorizationDeniedException t -> t.getAuthorizationResult().toString();
             default -> null;
         };
-        return cause;
     }
 }

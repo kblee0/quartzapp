@@ -68,7 +68,7 @@ public class QrtzJobHistoryService {
             qrtzJobHistoryRepository.updateEndTimeAndStatusAndExitMessageById(
                     LocalDateTime.now(),
                     jobException != null ? JobStatus.COMPLETED.name() : JobStatus.FAILED.name(),
-                    jobException.getMessage().concat("\n").concat(ExceptionUtil.getStackTrace(jobException)),
+                    jobException != null ? jobException.getMessage().concat("\n").concat(ExceptionUtil.getStackTrace(jobException)) : null,
                     QrtzJobHistoryId.builder()
                             .schedName(context.getScheduler().getSchedulerName())
                             .entryId(context.getFireInstanceId()).build());

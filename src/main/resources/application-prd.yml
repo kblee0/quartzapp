@@ -5,10 +5,10 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     # https://www.devglan.com/online-tools/jasypt-online-encryption-decryption
-    # Password: System.getenv("JASYPT_PASSWD")
-    url: ENC(P1mUsyLqf3knuUcUmdwqfIvePtNRVbfQ1+mWrKDP4llgjOX/a4/lyDwB8OAtK9QP)
-    username: ENC(hWgPVHRFzZT9ox2650Gbsg==)
-    password: ENC(nakhqJb9GyYZpIgFUW37/Q==)
+    # Password: JASYPT_ENCRYPTOR_PASSWORD environment variable value
+    url: ENC(jvqHWEjN1+qqQA/Fah847ZA5ZLWtkgG377b0BKYOHhd4BCOCt0Sde9UCKYzVgn6V)
+    username: ENC(sT7HF2JQTrQ+DC5H+UI9jQ==)
+    password: ENC(r/+MDqanhGst8fLJOsNnHw==)
     hikari:
       maximum-pool-size: 3
       connection-timeout: 5000

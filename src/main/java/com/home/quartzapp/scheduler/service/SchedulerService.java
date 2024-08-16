@@ -1,14 +1,10 @@
 package com.home.quartzapp.scheduler.service;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-
 import com.home.quartzapp.common.exception.ApiException;
 import com.home.quartzapp.common.util.DateTimeUtil;
 import com.home.quartzapp.scheduler.dto.*;
-import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.quartz.impl.jdbcjobstore.Constants;
 import org.quartz.impl.matchers.GroupMatcher;
@@ -16,19 +12,20 @@ import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import static org.quartz.CronExpression.isValidExpression;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 @Transactional
-@ExecuteInJTATransaction
 public class SchedulerService {
     private final SchedulerFactoryBean schedulerFactoryBean;
 
     private String getTriggerGroup(JobKey jobKey) {
-        StringBuilder triggerGroupName = new StringBuilder(jobKey.getGroup()).append(".").append(jobKey.getName());
-        return triggerGroupName.toString();
+        return jobKey.getGroup() + "." + jobKey.getName();
     }
 
     public JobStatusDto addJob(JobInfoDto jobInfoDto) {
@@ -75,7 +72,7 @@ public class SchedulerService {
                 } else {
                     // Triggers of the same type change schedule
                     scheduler.rescheduleJob(t.getKey(), findTrigger);
-                    // Change the state if any of the existing triggers are in the PASUSED state.
+                    // Change the state if any of the existing triggers are in the PAUSED state.
                     if(triggerStates.contains(Trigger.TriggerState.PAUSED)) {
                         scheduler.pauseTrigger(findTrigger.getKey());
                     }
@@ -89,7 +86,7 @@ public class SchedulerService {
                 Trigger findTrigger = currentTriggers.stream().filter(f -> f.getKey().equals(t.getKey())).findFirst().orElse(null);
                 if(findTrigger == null) {
                     scheduler.scheduleJob(t);
-                    // Change the state if any of the existing triggers are in the PASUSED state.
+                    // Change the state if any of the existing triggers are in the PAUSED state.
                     if(triggerStates.contains(Trigger.TriggerState.PAUSED)) {
                         scheduler.pauseTrigger(t.getKey());
                     }
@@ -98,7 +95,7 @@ public class SchedulerService {
             // Change job status to prevent missing status changes
             if(triggerStates.contains(Trigger.TriggerState.PAUSED)) scheduler.pauseJob(jobDetail.getKey());
         } catch (SchedulerException e) {
-            log.error("error occurred while scheduling with jobInfoDto : {}", jobInfoDto, e);
+            log.error("error occurred while scheduling with jobInfoDto : {}", jobInfoDto);
             throw ApiException.code("SCHE0004", e.getMessage());
         }
         log.debug("Job with jobInfoDto : {} rescheduled successfully.", jobInfoDto);
@@ -109,11 +106,11 @@ public class SchedulerService {
 
     public boolean deleteJob(JobInfoDto jobInfoDto) {
         JobKey jobKey = new JobKey(jobInfoDto.getName(), jobInfoDto.getGroup());
-        log.debug("[schedulerdebug] deleting job with jobKey : {}", jobKey);
+        log.debug("deleting job with jobKey : {}", jobKey);
         try {
             return schedulerFactoryBean.getScheduler().deleteJob(jobKey);
         } catch (SchedulerException e) {
-            log.error("[schedulerdebug] error occurred while deleting job with jobKey : {}", jobKey, e);
+            log.error("Error occurred while deleting job with jobKey : {}", jobKey);
             throw ApiException.code("SCHE0004", e.getMessage());
         }
     }
@@ -159,14 +156,10 @@ public class SchedulerService {
         }
 
         if(jobTriggerDto instanceof JobCronTriggerDto jobCronTriggerDto) {
-            if (!isValidExpression(jobCronTriggerDto.getCronExpression())) {
+            if (!CronExpression.isValidExpression(jobCronTriggerDto.getCronExpression())) {
                 throw new IllegalArgumentException("Provided expression " + jobCronTriggerDto.getCronExpression() + " is not a valid cron expression");
             }
-            // * CronTrigger misfire policy
-            // - Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY 모두 실행
-            // - Trigger.MISFIRE_INSTRUCTION_SMART_POLICY 최초 misfire 된것은 실행하나, 이후 misfire된 것은 폐기됨. fire now 과 같음.
-            // - CronTrigger.MISFIRE_INSTRUCTION_FIRE_ONCE_NOW 최초 misfire 된것은 실행하나, 이후 misfire된 것은 폐기됨.
-            // - CronTrigger.MISFIRE_INSTRUCTION_DO_NOTHING 아무것도 안함.
+            // Misfire : 무시
             return triggerBuilder
                     .withSchedule(
                         CronScheduleBuilder
@@ -175,23 +168,8 @@ public class SchedulerService {
                     ).build();
         } else {
             JobSimpleTriggerDto jobSimpleTriggerDto = (JobSimpleTriggerDto) jobTriggerDto;
-            // * SimpleTrigger misfire policy - limit count
-            // - Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY 실행가능 상태가 되는대로 job을 실행함.
-            // - Trigger.MISFIRE_INSTRUCTION_SMART_POLICY 실행가능 상태가 되는대로 job을 실행함. now existing(nothing) 과 같음.
-            // - SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW 최초 misfire 된것은 실행하나, 이후 misfire된 것은 폐기됨. now remaining 과 같음.
-            // - SimpleTrigger.MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_EXISTING_REPEAT_COUNT 실행가능 상태가 되는대로 job을 실행함. smart policy 과 같음.
-            // - SimpleTrigger.MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_REMAINING_REPEAT_COUNT 최초 misfire 된것은 실행하나, 이후 misfire된 것은 폐기됨. fire now 과 같음.
-            // - SimpleTrigger.MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_EXISTING_COUNT 아무것도 하지 않음. next remaining 과 같음.
-            // - SimpleTrigger.MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_REMAINING_COUNT 아무것도 하지 않음.
-            //
-            // * SimpleTrigger misfire policy - unlimit count
-            // - Trigger.MISFIRE_INSTRUCTION_IGNORE_MISFIRE_POLICY 실행가능 상태가 되는대로 job을 실행함.
-            // - Trigger.MISFIRE_INSTRUCTION_SMART_POLICY 아무것도 하지 않음. next remaining 과 같음.
-            // - SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW 최초 misfire 된것은 실행하나, 이후 misfire된 것은 폐기됨. now remaining 과 같음.
-            // - SimpleTrigger.MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_EXISTING_REPEAT_COUNT 최초 misfire 된것은 실행하나, 이후 misfire된 것은 폐기됨. now remaining 과 같음.
-            // - SimpleTrigger.MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_REMAINING_REPEAT_COUNT 최초 misfire 된것은 실행하나, 이후 misfire된 것은 폐기됨.
-            // - SimpleTrigger.MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_EXISTING_COUNT 아무것도 하지 않음. next remaining 과 같음.
-            // - SimpleTrigger.MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_REMAINING_COUNT 아무것도 하지 않음.
+
+            // Misfire : 무시
             return triggerBuilder
                     .withSchedule(
                         SimpleScheduleBuilder
@@ -245,7 +223,7 @@ public class SchedulerService {
 
             return jobStatusDto;
         } catch (SchedulerException e) {
-            log.error("[schedulerdebug] error while fetching job info", e);
+            log.error("Error while fetching job info", e);
             throw ApiException.code("SCHE0004", e.getMessage());
         }
     }
@@ -309,7 +287,7 @@ public class SchedulerService {
                 }
             }
         } catch (SchedulerException e) {
-            log.error("[schedulerdebug] error while fetching all job info", e);
+            log.error("Error while fetching all job info", e);
             throw ApiException.code("SCHE0004", e.getMessage());
         }
 
@@ -326,7 +304,7 @@ public class SchedulerService {
             JobSimpleTriggerDto jobTriggerDto = JobSimpleTriggerDto.builder()
                     .type(Constants.TTYPE_SIMPLE)
                     .group(this.getTriggerGroup(jobKey))
-                    .name("@Onece-"+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss:SSS")))
+                    .name("@Once-"+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss:SSS")))
                     .repeatIntervalInSeconds(0)
                     .repeatCount(0)
                     .build();
@@ -372,7 +350,7 @@ public class SchedulerService {
                 if(Trigger.TriggerState.ERROR.equals(scheduler.getTriggerState(trigger.getKey()))){
                     if(trigger instanceof SimpleTrigger simpleTrigger) {
                         if(simpleTrigger.getRepeatCount() == 0 && simpleTrigger.getTimesTriggered() > 0) {
-                            log.warn("Delete a trigger that is executed only once and has an error status :: JobGrup: {}, JobName: {}, TriggerName: {}",
+                            log.warn("Delete a trigger that is executed only once and has an error status :: JobGroup: {}, JobName: {}, TriggerName: {}",
                                     trigger.getJobKey().getGroup(), trigger.getJobKey().getName(), trigger.getKey().getName());
                             scheduler.unscheduleJob(trigger.getKey());
                             continue;
@@ -411,7 +389,7 @@ public class SchedulerService {
                 return true;
             }
         } catch (SchedulerException e) {
-            log.error("[schedulerdebug] error occurred while checking job exists :: jobKey : {}", jobKey, e);
+            log.error("Error occurred while checking job exists :: jobKey : {}", jobKey, e);
         }
         return false;
     }
@@ -428,7 +406,7 @@ public class SchedulerService {
                 }
             }
         } catch (SchedulerException e) {
-            log.error("[schedulerdebug] error occurred while checking job with jobKey : {}", jobKey, e);
+            log.error("Error occurred while checking job with jobKey : {}", jobKey, e);
         }
 
         return false;

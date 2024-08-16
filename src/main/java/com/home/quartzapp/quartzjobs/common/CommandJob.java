@@ -49,8 +49,8 @@ public class CommandJob extends QuartzJobBean implements InterruptableJob {
             throw new JobExecutionException(String.format("%s :: [%s] command failed with InterruptedException: %s", jobName, command ,e.getMessage()),false);
         }
         if(exitCode != 0) {
-            log.error("{} :: Exit code of [{}] command is not 0.(existCode={})", jobName, command, exitCode);
-            throw new JobExecutionException(String.format("%s :: Exit code of [%s] command is not 0.(existCode=%d)", jobName, command, exitCode), false);
+            log.error("{} :: Exit code of [{}] command is not 0. (existCode={})", jobName, command, exitCode);
+            throw new JobExecutionException(String.format("Exit code of [%s] command is not 0. (existCode=%d)", command, exitCode), false);
         }
         log.info("{} :: [JOB_FINISH] exitCode: {}", jobName, exitCode);
     }
@@ -90,16 +90,16 @@ public class CommandJob extends QuartzJobBean implements InterruptableJob {
     public void interrupt() {
         Thread currentThread = Thread.currentThread();
 
-        isJobInterrupted = true; //interrupt 되었다고 flag를 둔다
+        isJobInterrupted = true;
 
-        destoryProcessHandleTree(shellProcess.toHandle());
+        destroyProcessHandleTree(shellProcess.toHandle());
 
         log.info("[JOB_INTERRUPT] :: JobName: {}", jobName);
-        currentThread.interrupt(); //쓰레드가 일시 정지 상태이면 바로 깨워서 실행시킨다
+        currentThread.interrupt();
     }
 
-    private void destoryProcessHandleTree(ProcessHandle handle) {
-        handle.descendants().forEach(this::destoryProcessHandleTree);
+    private void destroyProcessHandleTree(ProcessHandle handle) {
+        handle.descendants().forEach(this::destroyProcessHandleTree);
         
         String commandLine = handle.info().command().orElse("(null)");
 

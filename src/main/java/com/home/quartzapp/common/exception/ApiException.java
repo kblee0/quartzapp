@@ -84,7 +84,7 @@ public class ApiException extends RuntimeException {
         if (cause != null) {
             log.error(">> Cause: {}", cause);
         }
-        log.error(">> Exception: {}, {}", e.getClass(), ExceptionUtil.getStackTrace(e));
+        log.error(">> Exception: {}", ExceptionUtil.getStackTrace(e));
         log.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
         return this;

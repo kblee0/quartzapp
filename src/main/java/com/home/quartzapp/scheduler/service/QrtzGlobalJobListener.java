@@ -1,5 +1,6 @@
 package com.home.quartzapp.scheduler.service;
 
+import com.home.quartzapp.common.util.ExceptionUtil;
 import lombok.RequiredArgsConstructor;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -12,12 +13,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class QrtzJobHistoryListener implements org.quartz.JobListener {
+public class QrtzGlobalJobListener implements org.quartz.JobListener {
     private final QrtzJobHistoryService qrtzJobHistoryService;
 
     @Override
     public String getName() {
-        return "QrtzJobHistoryListener";
+        return "QrtzGlobalJobListener";
     }
 
     @Override
@@ -32,11 +33,22 @@ public class QrtzJobHistoryListener implements org.quartz.JobListener {
 
     @Override
     public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
-        log.debug("{} :: id: {}, result: {}, jobWasExecuted.",
+        log.debug("jobWasExecuted :: JobKey: {}, InstanceId: {}, Status: {}",
             context.getJobDetail().getKey(),
             context.getFireInstanceId(),
             jobException == null ? JobStatus.COMPLETED.name() : JobStatus.FAILED.name());
 
-            qrtzJobHistoryService.updateQrtzJobHistory(context, jobException);
+        if(jobException != null) {
+            log.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+            log.error(">> Job: {}", context.getJobDetail().getKey());
+            log.error(">> ErrorMessage: {}", jobException.getMessage());
+            String cause = ExceptionUtil.getCause(jobException);
+            if (cause != null) {
+                log.error(">> Cause: {}", cause);
+            }
+            log.error(">> Exception: {}", ExceptionUtil.getStackTrace(jobException));
+            log.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        }
+        qrtzJobHistoryService.updateQrtzJobHistory(context, jobException);
     }
 }
