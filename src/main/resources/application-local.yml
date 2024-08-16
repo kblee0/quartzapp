@@ -6,6 +6,8 @@ spring:
     console:
       enabled: true  # H2 Console을 사용할지 여부 (H2 Console은 H2 Database를 UI로 제공해주는 기능)
       path: /h2-console  # H2 Console의 Path
+  jpa:
+    database: h2
   datasource:
     driver-class-name: org.h2.Driver
     url: jdbc:h2:/home/proj/quartz/quartzapp-h2;DATABASE_TO_UPPER=TRUE;AUTO_SERVER=TRUE

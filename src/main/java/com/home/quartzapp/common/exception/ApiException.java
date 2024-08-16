@@ -2,18 +2,14 @@ package com.home.quartzapp.common.exception;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.home.quartzapp.common.util.ApplicationContextProvider;
+import com.home.quartzapp.common.util.ExceptionUtil;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.ConstraintViolationException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authorization.AuthorizationDeniedException;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -81,27 +77,14 @@ public class ApiException extends RuntimeException {
     }
 
     public ApiException log(Exception e) {
-        String cause = switch (e) {
-            case MethodArgumentNotValidException t -> cause = t.getBody().toString();
-            case ConstraintViolationException ignore -> null;
-            case HttpRequestMethodNotSupportedException ignore -> null;
-            //@Valid 검증 실패 시 Catch
-            case IllegalArgumentException ignore -> null;
-            //Role Check 오류
-            case AuthorizationDeniedException t -> t.getAuthorizationResult().toString();
-            default -> null;
-        };
-
         log.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         log.error(">> ErrorCode: {}", this.getErrorCode());
         log.error(">> ErrorMessage: {}", this.getErrorMessage());
+        String cause = ExceptionUtil.getCause(e);
         if (cause != null) {
             log.error(">> Cause: {}", cause);
         }
-        StringBuffer stackTrace = new StringBuffer();
-        Arrays.stream(e.getStackTrace()).limit(15).forEach(m -> stackTrace.append("\n\t").append(m));
-        if(!stackTrace.isEmpty()) stackTrace.append("\n\t...");
-        log.error(">> Exception: {}{}", e.getClass(), stackTrace);
+        log.error(">> Exception: {}, {}", e.getClass(), ExceptionUtil.getStackTrace(e));
         log.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
         return this;

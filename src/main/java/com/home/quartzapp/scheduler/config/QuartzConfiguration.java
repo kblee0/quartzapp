@@ -5,6 +5,7 @@ import java.util.Properties;
 
 import javax.sql.DataSource;
 
+import com.home.quartzapp.scheduler.service.QrtzJobHistoryListener;
 import lombok.RequiredArgsConstructor;
 import org.quartz.spi.TriggerFiredBundle;
 import org.springframework.beans.BeansException;
@@ -16,15 +17,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.scheduling.quartz.SpringBeanJobFactory;
 
-import com.home.quartzapp.scheduler.service.JobListener;
-import com.home.quartzapp.scheduler.service.TriggerListener;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @RequiredArgsConstructor
 public class QuartzConfiguration {
-    private final TriggerListener triggerListener;
-    private final JobListener jobListener;
+    private final QrtzJobHistoryListener qrtzJobHistoryListener;
 
     private static class AutoWiringSpringBeanJobFactory extends SpringBeanJobFactory {
         private transient AutowireCapableBeanFactory beanFactory;
@@ -66,8 +64,7 @@ public class QuartzConfiguration {
         schedulerFactoryBean.setOverwriteExistingJobs(true);
         schedulerFactoryBean.setWaitForJobsToCompleteOnShutdown(true);
         schedulerFactoryBean.setAutoStartup(false);
-        schedulerFactoryBean.setGlobalTriggerListeners(triggerListener);
-        schedulerFactoryBean.setGlobalJobListeners(jobListener);
+        schedulerFactoryBean.setGlobalJobListeners(qrtzJobHistoryListener);
 
         return schedulerFactoryBean;
     }

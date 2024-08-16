@@ -12,12 +12,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class JobListener implements org.quartz.JobListener {
-    private final JobHistoryService jobHistoryService;
+public class QrtzJobHistoryListener implements org.quartz.JobListener {
+    private final QrtzJobHistoryService qrtzJobHistoryService;
 
     @Override
     public String getName() {
-        return "globalJob";
+        return "QrtzJobHistoryListener";
     }
 
     @Override
@@ -27,7 +27,7 @@ public class JobListener implements org.quartz.JobListener {
     @Override
     public void jobToBeExecuted(JobExecutionContext context) {
         log.debug("{} :: id: {}, jobToBeExecuted.", context.getJobDetail().getKey(), context.getFireInstanceId());
-        jobHistoryService.insertJobHistory(context);
+        qrtzJobHistoryService.saveQrtzJobHistory(context);
     }
 
     @Override
@@ -37,6 +37,6 @@ public class JobListener implements org.quartz.JobListener {
             context.getFireInstanceId(),
             jobException == null ? JobStatus.COMPLETED.name() : JobStatus.FAILED.name());
 
-            jobHistoryService.updateJobHistory(context, jobException);
+            qrtzJobHistoryService.updateQrtzJobHistory(context, jobException);
     }
 }

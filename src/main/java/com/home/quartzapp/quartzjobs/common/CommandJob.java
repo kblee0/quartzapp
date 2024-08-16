@@ -48,6 +48,10 @@ public class CommandJob extends QuartzJobBean implements InterruptableJob {
         } catch (InterruptedException e) {
             throw new JobExecutionException(String.format("%s :: [%s] command failed with InterruptedException: %s", jobName, command ,e.getMessage()),false);
         }
+        if(exitCode != 0) {
+            log.error("{} :: Exit code of [{}] command is not 0.(existCode={})", jobName, command, exitCode);
+            throw new JobExecutionException(String.format("%s :: Exit code of [%s] command is not 0.(existCode=%d)", jobName, command, exitCode), false);
+        }
         log.info("{} :: [JOB_FINISH] exitCode: {}", jobName, exitCode);
     }
 

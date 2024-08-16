@@ -1,6 +1,6 @@
 package com.home.quartzapp.quartzjobs.common;
 
-import com.home.quartzapp.common.exception.ApiException;
+import com.home.quartzapp.common.util.ExceptionUtil;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -84,8 +84,9 @@ public class SequentialJob extends QuartzJobBean {
             try {
                 this.jobExecute(context, jobClassName);
             } catch (JobExecutionException e) {
-                ApiException ex = ApiException.code("SCHE0004").log(e);
-                if(stopOnError) throw ex;
+                log.error("{} :: subJob error, subJobClassName: {}, message: {}, {}", jobName, jobClassName, e.getMessage(), ExceptionUtil.getStackTrace(e));
+                if(stopOnError) throw e;
+                log.warn("{} :: Because the {} job's stopOnError setting is false, the following subtasks are executed:", jobName, jobClassName);
             }
         }
         log.info("{} :: [JOB_FINISH]", jobName);
@@ -108,10 +109,6 @@ public class SequentialJob extends QuartzJobBean {
             log.error("{} :: IllegalAccessException, className = {}, message = {}", jobName, className, e.getMessage() );
             throw new RuntimeException(e);
         }
-        try {
-            jobInstance.execute(context);
-        } catch (JobExecutionException e) {
-            throw e;
-        }
+        jobInstance.execute(context);
     }
 }
