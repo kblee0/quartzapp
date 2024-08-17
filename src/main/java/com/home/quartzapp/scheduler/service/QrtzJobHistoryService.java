@@ -65,10 +65,16 @@ public class QrtzJobHistoryService {
 
     public void updateQrtzJobHistory(JobExecutionContext context, JobExecutionException jobException) {
         try {
+            StringBuilder exitMessage = new StringBuilder();
+
+            if(jobException != null) {
+                exitMessage.append(jobException.getMessage());
+                if(jobException.getCause() != null) exitMessage.append(" :: ").append(jobException.getCause().getMessage());
+            }
             qrtzJobHistoryRepository.updateEndTimeAndStatusAndExitMessageById(
                     LocalDateTime.now(),
-                    jobException != null ? JobStatus.COMPLETED.name() : JobStatus.FAILED.name(),
-                    jobException != null ? jobException.getMessage().concat("\n").concat(ExceptionUtil.getStackTrace(jobException)) : null,
+                    jobException == null ? JobStatus.COMPLETED.name() : JobStatus.FAILED.name(),
+                    exitMessage.isEmpty() ? null : exitMessage.toString(),
                     QrtzJobHistoryId.builder()
                             .schedName(context.getScheduler().getSchedulerName())
                             .entryId(context.getFireInstanceId()).build());

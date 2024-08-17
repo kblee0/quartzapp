@@ -42,7 +42,7 @@ public class QrtzGlobalJobListener implements org.quartz.JobListener {
             log.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             log.error(">> Job: {}", context.getJobDetail().getKey());
             log.error(">> ErrorMessage: {}", jobException.getMessage());
-            String cause = ExceptionUtil.getCause(jobException);
+            String cause = ExceptionUtil.getCause(jobException.getCause());
             if (cause != null) {
                 log.error(">> Cause: {}", cause);
             }

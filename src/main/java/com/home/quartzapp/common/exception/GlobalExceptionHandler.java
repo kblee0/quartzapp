@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 public class GlobalExceptionHandler {
     //모든 예외를 ApiError 형식으로 반환한다.
     @ExceptionHandler(Exception.class)
-    protected ResponseEntity<?> handleException(Exception  e) {
+    protected ResponseEntity<?> handleException(Throwable  e) {
         String cause = null;
 
         ApiException apiException = switch (e) {

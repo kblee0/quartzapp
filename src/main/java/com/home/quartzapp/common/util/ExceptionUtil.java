@@ -8,7 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import java.util.Arrays;
 
 public class ExceptionUtil {
-    public static String getStackTrace(Exception e) {
+    public static String getStackTrace(Throwable e) {
         if(e == null) return null;
 
         StringBuffer stackTrace = new StringBuffer(e.getClass().getName());
@@ -18,12 +18,12 @@ public class ExceptionUtil {
         return stackTrace.toString();
     }
 
-    public static String getCause(Exception e) {
+    public static String getCause(Throwable e) {
         if(e == null) return null;
 
         //@Valid 검증 실패 시 Catch
         //Role Check 오류
-        return switch (e) {
+        String cause = switch (e) {
             case MethodArgumentNotValidException t -> t.getBody().toString();
             case ConstraintViolationException ignore -> null;
             case HttpRequestMethodNotSupportedException ignore -> null;
@@ -33,5 +33,7 @@ public class ExceptionUtil {
             case AuthorizationDeniedException t -> t.getAuthorizationResult().toString();
             default -> null;
         };
+        if(cause == null && e.getCause() != null) cause = e.getCause().getMessage();
+        return cause;
     }
 }

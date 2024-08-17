@@ -9,6 +9,7 @@ import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.scheduling.quartz.QuartzJobBean;
+import org.springframework.util.StopWatch;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -52,6 +53,7 @@ public class SequentialJob extends QuartzJobBean {
     @Override
     protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
         this.setJobName(context.getJobDetail().getKey().toString());
+        StopWatch stopWatch = new StopWatch(context.getFireInstanceId());
 
         log.info("{} :: [JOB_START]", jobName);
 
@@ -66,6 +68,8 @@ public class SequentialJob extends QuartzJobBean {
 
             LinkedHashMap<String,?> jobData = (LinkedHashMap<String,?>)jobObj;
             String jobClassName = jobData.get("jobClassName").toString();
+
+            stopWatch.start(jobName.concat(":").concat(jobClassName));
 
             // JobDataMap change
             HashMap<String,?> subJobDataMap = (HashMap<String,?>)jobData.get("jobDataMap");
@@ -88,8 +92,9 @@ public class SequentialJob extends QuartzJobBean {
                 if(stopOnError) throw e;
                 log.warn("{} :: Because the {} job's stopOnError setting is false, the following subtasks are executed:", jobName, jobClassName);
             }
+            stopWatch.stop();
         }
-        log.info("{} :: [JOB_FINISH]", jobName);
+        log.info("{} :: [JOB_FINISH] {}\n{}", jobName, stopWatch.shortSummary(), stopWatch.prettyPrint());
     }
     private void jobExecute(JobExecutionContext context, String className ) throws JobExecutionException {
         Class<?> jobClass;

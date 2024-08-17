@@ -13,6 +13,7 @@ import org.springframework.scheduling.quartz.QuartzJobBean;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StopWatch;
 
 @Getter
 @Setter
@@ -27,6 +28,8 @@ public class CommandJob extends QuartzJobBean implements InterruptableJob {
     @Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
         this.setJobName(context.getJobDetail().getKey().toString());
+        StopWatch stopWatch = new StopWatch(context.getFireInstanceId());
+        stopWatch.start(jobName);
 
         JobDataMap jobDataMap = context.getMergedJobDataMap();
 
@@ -44,15 +47,16 @@ public class CommandJob extends QuartzJobBean implements InterruptableJob {
             exitCode = processBuilder(context, cwd, command, outputToLog, charsetName);
             log.info("{} :: exitCode: {}", jobName, exitCode);
         } catch (IOException e) {
-            throw new JobExecutionException(String.format("%s :: [%s] command failed with IOException.", jobName, command), e.getCause(),false);
+            throw new JobExecutionException(String.format("\"%s\" command failed with IOException.", command), e,false);
         } catch (InterruptedException e) {
-            throw new JobExecutionException(String.format("%s :: [%s] command failed with InterruptedException: %s", jobName, command ,e.getMessage()),false);
+            throw new JobExecutionException(String.format("\"%s\" command failed with InterruptedException.", command), e, false);
         }
         if(exitCode != 0) {
             log.error("{} :: Exit code of [{}] command is not 0. (existCode={})", jobName, command, exitCode);
-            throw new JobExecutionException(String.format("Exit code of [%s] command is not 0. (existCode=%d)", command, exitCode), false);
+            throw new JobExecutionException(String.format("Exit code of \"%s\" command is not 0. (existCode=%d)", command, exitCode), false);
         }
-        log.info("{} :: [JOB_FINISH] exitCode: {}", jobName, exitCode);
+        stopWatch.stop();
+        log.info("{} :: [JOB_FINISH] {}, exitCode: {}", jobName, stopWatch.shortSummary(), exitCode);
     }
 
     private int processBuilder(JobExecutionContext context, String workingDir, String command, boolean outputToLog, String charsetName) throws IOException, InterruptedException {

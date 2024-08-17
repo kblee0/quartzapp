@@ -76,7 +76,7 @@ public class ApiException extends RuntimeException {
         }
     }
 
-    public ApiException log(Exception e) {
+    public ApiException log(Throwable e) {
         log.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         log.error(">> ErrorCode: {}", this.getErrorCode());
         log.error(">> ErrorMessage: {}", this.getErrorMessage());
