@@ -1,6 +1,7 @@
 package com.home.quartzapp.quartzjobs.common;
 
-import com.home.quartzapp.common.util.ExceptionUtil;
+import com.home.quartzapp.common.exception.ErrorCodeException;
+import com.home.quartzapp.quartzjobs.util.JobDataMapWrapper;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -12,11 +13,8 @@ import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.util.StopWatch;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Optional;
+import java.util.List;
+import java.util.Map;
 
 /*
     - JobDataMap Sample
@@ -53,49 +51,51 @@ public class SequentialJob extends QuartzJobBean {
     @Override
     protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
         this.setJobName(context.getJobDetail().getKey().toString());
+
+        // StopWatch - start
         StopWatch stopWatch = new StopWatch(context.getFireInstanceId());
+
+        // JobDataMap Check
+        JobDataMapWrapper jobDataMap = new JobDataMapWrapper(context.getMergedJobDataMap());
 
         log.info("{} :: [JOB_START]", jobName);
 
-        JobDataMap jobDataMap = context.getJobDetail().getJobDataMap();
+        List<JobDataMap> jobSequence = jobDataMap.get("jobSequence", List.class).orElseThrow(() -> new ErrorCodeException("QJBE0001", "jobSequence"));
 
-        ArrayList<?> jobSequence = Optional.ofNullable((ArrayList<Object>)jobDataMap.get("jobSequence")).orElse(new ArrayList<>());
+        for(Map<String,Object> jobMap : jobSequence) {
+            JobDataMapWrapper job = new JobDataMapWrapper(new JobDataMap(jobMap));
 
-        if(jobSequence.isEmpty()) log.warn("jobSequence is not defined : JobName: {}", jobName);
+            String jobClassName = job.getString("jobClassName").orElseThrow(() -> new ErrorCodeException("QJBE0001", "jobClassName"));
+            boolean stopOnError = job.getBoolean("stopOnError").orElse(true);
+            Map<String,Object> subJobDataMap = job.get("jobDataMap", Map.class).orElse(null);
+            Object prevJobResult = job.get("result",Object.class).orElse(null);
 
-        for(Object jobObj : jobSequence) {
-            Object resultObj = context.getMergedJobDataMap().get("result");
-
-            LinkedHashMap<String,?> jobData = (LinkedHashMap<String,?>)jobObj;
-            String jobClassName = jobData.get("jobClassName").toString();
-
-            stopWatch.start(jobName.concat(":").concat(jobClassName));
+            stopWatch.start(jobName.concat("->").concat(jobClassName));
 
             // JobDataMap change
-            HashMap<String,?> subJobDataMap = (HashMap<String,?>)jobData.get("jobDataMap");
-            Boolean stopOnError = Optional.ofNullable((Boolean)subJobDataMap.get("stopOnError")).orElse(true);
             context.getJobDetail().getJobDataMap().clear();
             context.getMergedJobDataMap().clear();
+
             if(subJobDataMap != null) {
                 context.getJobDetail().getJobDataMap().putAll(subJobDataMap);
                 context.getMergedJobDataMap().putAll(subJobDataMap);
             }
-            if(resultObj != null) {
-                context.getMergedJobDataMap().put("result", resultObj);
+            if(prevJobResult != null) {
+                context.getMergedJobDataMap().put("result", prevJobResult);
             }
             log.info("{} || [SUB_JOB_EXEC] subJobClassName: {}, stopOnError = {}", jobName, jobClassName, stopOnError);
 
             try {
                 this.jobExecute(context, jobClassName);
-            } catch (JobExecutionException e) {
-                log.error("{} :: subJob error, subJobClassName: {}, message: {}, {}", jobName, jobClassName, e.getMessage(), ExceptionUtil.getStackTrace(e));
-                if(stopOnError) throw e;
-                log.warn("{} :: Because the {} job's stopOnError setting is false, the following subtasks are executed:", jobName, jobClassName);
+            } catch (Throwable e) {
+                if(stopOnError) throw new ErrorCodeException("QJBE0002", e);
+                log.warn("{} :: An error occurred in server job \"{}}\".", jobName, jobClassName);
             }
             stopWatch.stop();
         }
         log.info("{} :: [JOB_FINISH] {}\n{}", jobName, stopWatch.shortSummary(), stopWatch.prettyPrint());
     }
+
     private void jobExecute(JobExecutionContext context, String className ) throws JobExecutionException {
         Class<?> jobClass;
         Job jobInstance;
@@ -104,15 +104,8 @@ public class SequentialJob extends QuartzJobBean {
             Constructor<?> constructor = jobClass.getDeclaredConstructor();
             constructor.setAccessible(true); // If constructor is private
             jobInstance = (Job)constructor.newInstance();
-        } catch (ClassNotFoundException e) {
-            log.error("{} :: ClassNotFoundException, className = {}", jobName, className );
-            throw new RuntimeException(e);
-        } catch (InstantiationException | NoSuchMethodException | InvocationTargetException e) {
-            log.error("{} :: InstantiationException, className = {}, message = {}", jobName, className, e.getMessage() );
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
-            log.error("{} :: IllegalAccessException, className = {}, message = {}", jobName, className, e.getMessage() );
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new ErrorCodeException("QJBE0005", e, className);
         }
         jobInstance.execute(context);
     }

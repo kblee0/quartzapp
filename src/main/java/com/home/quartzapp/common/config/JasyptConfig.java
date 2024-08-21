@@ -1,5 +1,6 @@
 package com.home.quartzapp.common.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jasypt.encryption.StringEncryptor;
 import org.jasypt.encryption.pbe.PooledPBEStringEncryptor;
 import org.jasypt.encryption.pbe.config.SimpleStringPBEConfig;
@@ -7,14 +8,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import lombok.extern.slf4j.Slf4j;
-
-import java.util.Optional;
-
 @Configuration
 @Slf4j
 public class JasyptConfig {
-    @Value("${JASYPT_ENCRYPTOR_PASSWORD:paword}")
+    @Value("${JASYPT_ENCRYPTOR_PASSWORD:password}")
     private String encryptorPassword;
 
     @Bean("jasyptStringEncryptor")

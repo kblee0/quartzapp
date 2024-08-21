@@ -1,12 +1,13 @@
 package com.home.quartzapp.common.util;
 
-import jakarta.validation.ConstraintViolationException;
+import com.home.quartzapp.common.exception.ErrorCodeException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authorization.AuthorizationDeniedException;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.util.Arrays;
 
+@Slf4j
 public class ExceptionUtil {
     public static String getStackTrace(Throwable e) {
         if(e == null) return null;
@@ -18,22 +19,39 @@ public class ExceptionUtil {
         return stackTrace.toString();
     }
 
-    public static String getCause(Throwable e) {
+    public static String getDetailMessage(Throwable e) {
         if(e == null) return null;
 
         //@Valid 검증 실패 시 Catch
         //Role Check 오류
-        String cause = switch (e) {
+        return switch (e) {
             case MethodArgumentNotValidException t -> t.getBody().toString();
-            case ConstraintViolationException ignore -> null;
-            case HttpRequestMethodNotSupportedException ignore -> null;
-            //@Valid 검증 실패 시 Catch
-            case IllegalArgumentException ignore -> null;
             //Role Check 오류
             case AuthorizationDeniedException t -> t.getAuthorizationResult().toString();
-            default -> null;
+            default -> e.getMessage();
         };
-        if(cause == null && e.getCause() != null) cause = e.getCause().getMessage();
-        return cause;
+    }
+
+    public static ErrorCodeException findErrorCodeException(Throwable exception) {
+        for(Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if(cause instanceof ErrorCodeException) {
+                return (ErrorCodeException) cause;
+            }
+        }
+        return null;
+    }
+
+    public static void log(Throwable exception) {
+        ErrorCodeException errorCodeException = findErrorCodeException(exception);
+
+        if(errorCodeException != null) {
+            log.error(">> An ErrorCodeException was thrown :: ErrorCode: {}, ErrorMessage: {}",
+                    errorCodeException.getErrorCode(),
+                    errorCodeException.getMessage(),
+                    exception);
+        }
+        else {
+            log.error(">> An Exception was thrown :: {}", exception.getMessage(), exception);
+        }
     }
 }

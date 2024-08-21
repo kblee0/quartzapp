@@ -1,6 +1,5 @@
 package com.home.quartzapp.security.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.home.quartzapp.common.exception.ApiException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,14 +13,12 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 @Slf4j
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
-    private final ObjectMapper objectMapper;
-
     @Override
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
                          AuthenticationException authException) {
         log.error("Request URI: {}", request.getRequestURI());
 
-        ApiException.code("CMNE0005").log(authException).responseWrite(response);
+        ApiException.code("CMNE0005", authException).log().responseWrite(response);
     }
 }

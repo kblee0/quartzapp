@@ -1,19 +1,21 @@
 package com.home.quartzapp.quartzjobs.common;
 
+import com.home.quartzapp.common.exception.ErrorCodeException;
+import com.home.quartzapp.quartzjobs.util.JobDataMapWrapper;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.quartz.*;
+import org.springframework.scheduling.quartz.QuartzJobBean;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StopWatch;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.Optional;
-
-import lombok.Getter;
-import lombok.Setter;
-import org.quartz.*;
-import org.springframework.scheduling.quartz.QuartzJobBean;
-
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StopWatch;
 
 @Getter
 @Setter
@@ -28,32 +30,32 @@ public class CommandJob extends QuartzJobBean implements InterruptableJob {
     @Override
 	protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
         this.setJobName(context.getJobDetail().getKey().toString());
+
+        // StopWatch - start
         StopWatch stopWatch = new StopWatch(context.getFireInstanceId());
         stopWatch.start(jobName);
 
-        JobDataMap jobDataMap = context.getMergedJobDataMap();
+        // JobDataMap Check
+        JobDataMapWrapper jobDataMap = new JobDataMapWrapper(context.getMergedJobDataMap());
 
-        log.info("{} :: [JOB_START] cwd: {}, command: {}, outputToLog: {}",
-                jobName, jobDataMap.get("cwd"), jobDataMap.get("command"), jobDataMap.get("outputToLog"));
+        String cwd = jobDataMap.getString("cwd").orElse(System.getProperty("user.dir"));
+        String command = jobDataMap.getString("command").orElseThrow(() -> new ErrorCodeException("QJBE0001", "command"));
+        boolean outputToLog = jobDataMap.getBoolean("outputToLog").orElse(true);
+        boolean checkExistCode = jobDataMap.getBoolean("checkExistCode").orElse(false);
+        String charsetName = jobDataMap.getString("charsetName").orElse(Charset.defaultCharset().displayName());
 
-        String cwd = Optional.ofNullable(jobDataMap.getString("cwd")).orElse(System.getProperty("user.dir"));
-        String command = Optional.ofNullable(jobDataMap.getString("command")).orElseThrow( () ->
-                new IllegalArgumentException(String.format("%s :: The \"command\" parameter is required.", this.getJobName())));
-        boolean outputToLog = jobDataMap.getBooleanValue("outputToLog");
-        String charsetName = jobDataMap.getString("charsetName");
+        log.info("{} :: [JOB_START] cwd: {}, command: {}, outputToLog: {}", jobName, cwd, command, outputToLog);
 
         int exitCode;
         try {
             exitCode = processBuilder(context, cwd, command, outputToLog, charsetName);
             log.info("{} :: exitCode: {}", jobName, exitCode);
-        } catch (IOException e) {
-            throw new JobExecutionException(String.format("\"%s\" command failed with IOException.", command), e,false);
-        } catch (InterruptedException e) {
-            throw new JobExecutionException(String.format("\"%s\" command failed with InterruptedException.", command), e, false);
+        } catch (IOException | InterruptedException e) {
+            throw new ErrorCodeException("QJBE0002", e);
         }
         if(exitCode != 0) {
-            log.error("{} :: Exit code of [{}] command is not 0. (existCode={})", jobName, command, exitCode);
-            throw new JobExecutionException(String.format("Exit code of \"%s\" command is not 0. (existCode=%d)", command, exitCode), false);
+            log.warn("{} :: The exist code for the \"{}\" command is {}.", jobName, command, exitCode);
+            if(checkExistCode) throw new ErrorCodeException("QJBE0004", new Throwable("Exit code is " + exitCode));
         }
         stopWatch.stop();
         log.info("{} :: [JOB_FINISH] {}, exitCode: {}", jobName, stopWatch.shortSummary(), exitCode);

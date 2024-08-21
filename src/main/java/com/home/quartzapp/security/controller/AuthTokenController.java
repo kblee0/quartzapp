@@ -25,7 +25,7 @@ public class AuthTokenController {
         return switch (grantType) {
             case "password" -> ResponseEntity.ok(authTokenService.authTokenByPassword(authTokenRequestDto));
             case "refresh_token" -> ResponseEntity.ok(authTokenService.authTokenByRefreshToken(authTokenRequestDto));
-            default -> throw ApiException.code("CMNE0004");
+            default -> throw ApiException.code("CMNE0007");
         };
     }
 }

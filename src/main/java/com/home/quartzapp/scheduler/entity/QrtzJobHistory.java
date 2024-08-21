@@ -7,6 +7,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDateTime;
 
@@ -16,27 +17,28 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
+@DynamicUpdate
 @Table(name = "QRTZ_JOB_HISTORY")
 public class QrtzJobHistory {
     @EmbeddedId
     private QrtzJobHistoryId id;
 
-    @Size(max = 190)
+    @Size(max = 200)
     @NotNull
-    @Column(name = "TRIGGER_NAME", nullable = false, length = 190)
+    @Column(name = "TRIGGER_NAME", nullable = false, length = 200)
     private String triggerName;
 
-    @Size(max = 190)
+    @Size(max = 200)
     @NotNull
-    @Column(name = "TRIGGER_GROUP", nullable = false, length = 190)
+    @Column(name = "TRIGGER_GROUP", nullable = false, length = 200)
     private String triggerGroup;
 
-    @Size(max = 190)
-    @Column(name = "JOB_NAME", length = 190)
+    @Size(max = 200)
+    @Column(name = "JOB_NAME", length = 200)
     private String jobName;
 
-    @Size(max = 190)
-    @Column(name = "JOB_GROUP", length = 190)
+    @Size(max = 200)
+    @Column(name = "JOB_GROUP", length = 200)
     private String jobGroup;
 
     @Size(max = 4096)
@@ -54,6 +56,10 @@ public class QrtzJobHistory {
     @NotNull
     @Column(name = "STATUS", nullable = false, length = 16)
     private String status;
+
+    @Size(max = 2500)
+    @Column(name = "EXIT_Code", length = 2500)
+    private String exitCode;
 
     @Size(max = 2500)
     @Column(name = "EXIT_MESSAGE", length = 2500)

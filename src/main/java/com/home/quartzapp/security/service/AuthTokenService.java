@@ -43,12 +43,12 @@ public class AuthTokenService {
         catch (Exception e) {
             log.error("authTokenByPassword error :: loginId : {}", authTokenRequestDto.getLoginId());
             throw switch (e) {
-                case BadCredentialsException ignored -> ApiException.code("SCR0001");
-                case UsernameNotFoundException ignored -> ApiException.code("SCR0001");
-                case AccountLockedException ignored -> ApiException.code("SCR0006");
-                case AccountExpiredException ignored -> ApiException.code("SCR0006");
-                case DisabledException ignored -> ApiException.code("SCR0006");
-                default -> ApiException.code("CMNE0001", e.getMessage());
+                case BadCredentialsException cause -> ApiException.code("SCR0001", cause);
+                case UsernameNotFoundException cause -> ApiException.code("SCR0001", cause);
+                case AccountLockedException cause -> ApiException.code("SCR0006", cause);
+                case AccountExpiredException cause -> ApiException.code("SCR0006", cause);
+                case DisabledException cause -> ApiException.code("SCR0006", cause);
+                default -> ApiException.code("CMNE0001", e, e.getMessage());
             };
         }
 

@@ -1,9 +1,7 @@
 package com.home.quartzapp.security.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.home.quartzapp.common.exception.ApiException;
 import com.home.quartzapp.security.service.JwtService;
-import com.home.quartzapp.security.service.LoginUserDetailsService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -26,8 +24,6 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter{
     private final JwtService jwtService;
-    private final LoginUserDetailsService loginUserDetailsService;
-    private final ObjectMapper objectMapper;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {

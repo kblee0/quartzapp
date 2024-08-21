@@ -1,11 +1,10 @@
 package com.home.quartzapp.quartzjobs.common;
 
-import com.home.quartzapp.common.util.ExceptionUtil;
-import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.ReadContext;
+import com.home.quartzapp.common.exception.ErrorCodeException;
+import com.home.quartzapp.common.util.JsonPathExtractor;
+import com.home.quartzapp.quartzjobs.util.JobDataMapWrapper;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.http.HttpMethod;
@@ -18,40 +17,37 @@ import org.springframework.util.StopWatch;
 import org.springframework.web.client.RestClient;
 
 import java.util.HashMap;
-import java.util.Optional;
+import java.util.Map;
 
 @Setter
 @Slf4j
 public class RestClientJob extends QuartzJobBean {
-    private String jobName = null;
+    private String jobName;
 
     @Override
     protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
         this.setJobName(context.getJobDetail().getKey().toString());
 
+        // StopWatch - start
         StopWatch stopWatch = new StopWatch(context.getFireInstanceId());
         stopWatch.start(jobName);
 
-        JobDataMap jobDataMap = context.getMergedJobDataMap();
+        // JobDataMap Check
+        JobDataMapWrapper jobDataMap = new JobDataMapWrapper(context.getMergedJobDataMap());
 
-        log.info("{} :: [JOB_START] url: {} {}", jobName, jobDataMap.get("method"), jobDataMap.get("url"));
+        String method = jobDataMap.getString("method").orElseThrow( () -> new ErrorCodeException("QJBE0001", "method"));
+        String url = jobDataMap.getString("url").orElseThrow(() -> new ErrorCodeException("QJBE0001", "url"));
+        String requestBody = jobDataMap.getString("method").orElse(null);
+        Map<String,String> headers = jobDataMap.get("headers", Map.class).orElse(new HashMap<>());
+        int connectTimeoutSec = jobDataMap.getInteger("connectTimeoutSec").orElse(5);
+        int requestTimeoutSec = jobDataMap.getInteger("requestTimeoutSec").orElse(120);
 
-        String method = null;
-        String url = null;
-        String requestBody = null;
+        log.debug("{} :: RestClientRequest, url={} {}, Timeout={}/{}, body={}", jobName, method, url, connectTimeoutSec, requestTimeoutSec, requestBody);
+
+        // Main process
         ResponseEntity<String> responseEntity;
 
         try {
-            method = jobDataMap.getString("method");
-            url = jobDataMap.getString("url");
-            HashMap<String,String> headers = Optional.ofNullable((HashMap<String,String>)jobDataMap.get("headers")).orElse(new HashMap<>());
-            requestBody = jobDataMap.getString("body");
-
-            int connectTimeoutSec = jobDataMap.containsKey("connectTimeoutSec") ? jobDataMap.getInt("connectTimeoutSec") : 5;
-            int requestTimeoutSec = jobDataMap.containsKey("requestTimeoutSec") ? jobDataMap.getInt("requestTimeoutSec") : 120;
-
-            log.debug("{} :: RestClientRequest, url={} {}, Timeout={}/{}, body={}", jobName, method, url, connectTimeoutSec, requestTimeoutSec, requestBody);
-
             RestClient restClient = RestClient.builder()
                     .requestFactory(getClientHttpRequestFactory(connectTimeoutSec,requestTimeoutSec))
                     .build();
@@ -67,39 +63,33 @@ public class RestClientJob extends QuartzJobBean {
                     .toEntity(String.class);
         } catch (Throwable e) {
             log.error("{} :: RestClientError, url={} {}, body={}", jobName, method, url, requestBody);
-            throw new JobExecutionException("RestClient request failed.", e, false);
+            throw new ErrorCodeException("QJBE0002", e);
         }
 
         if (!responseEntity.getStatusCode().is2xxSuccessful()) {
-            String errorMessage = getErrorMessageByJsonPath(responseEntity.getBody(), jobDataMap.get("errorMessagePath").toString()).orElse(
-                    String.format("RestClient status code is not 2xx :: statusCode=%d", responseEntity.getStatusCode().value())
-            );
-            throw new JobExecutionException(errorMessage, false);
+            String errorMessage;
+            try {
+                errorMessage = jobDataMap.getString("errorMessagePath")
+                        .flatMap(path -> JsonPathExtractor.parse(responseEntity.getBody()).get(path))
+                        .orElse("RestClient status code is not 2xx :: statusCode=" + responseEntity.getStatusCode());
+            } catch(Exception e) {
+                throw new ErrorCodeException("QJBE0004", e);
+            }
+            throw new ErrorCodeException("QJBE0003", new Throwable(errorMessage));
         }
+
         log.debug("{} :: Response Body={}", jobName, responseEntity.getBody());
 
-        JobDataMap resultDataMap = new JobDataMap();
-        resultDataMap.put("status", responseEntity.getStatusCode());
-        resultDataMap.put("headers", responseEntity.getHeaders());
-        resultDataMap.put("body", responseEntity.getBody());
-
-        context.getMergedJobDataMap().put("result", resultDataMap);
+        // Set Result Map
+        context.getMergedJobDataMap().put("result", JobDataMapWrapper.create()
+                .put("status", responseEntity.getStatusCode())
+                .put("headers", responseEntity.getHeaders())
+                .put("body", responseEntity.getBody())
+                .getJobDataMap()
+        );
 
         stopWatch.stop();
         log.info("{} :: [JOB_FINISH] {}, statusCode: {}", jobName, stopWatch.shortSummary(), responseEntity.getStatusCode());
-    }
-
-    Optional<String> getErrorMessageByJsonPath(String body, String jsonPath) {
-        if(body == null || jsonPath == null) return Optional.empty();
-
-        try {
-            ReadContext ctx = JsonPath.parse(body);
-            Object obj = ctx.read(jsonPath);
-            return Optional.ofNullable(obj.toString());
-        } catch (Exception e) {
-            log.error("getErrorMessageByJsonPath :: message: {}, exception: {}", e.getMessage(), ExceptionUtil.getStackTrace(e));
-            return Optional.empty();
-        }
     }
 
     private ClientHttpRequestFactory getClientHttpRequestFactory(int connectTimeoutSec, int requestTimeoutSec) {

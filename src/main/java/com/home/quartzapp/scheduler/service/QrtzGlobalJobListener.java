@@ -1,14 +1,12 @@
 package com.home.quartzapp.scheduler.service;
 
 import com.home.quartzapp.common.util.ExceptionUtil;
+import com.home.quartzapp.scheduler.model.JobStatus;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.stereotype.Component;
-
-import com.home.quartzapp.scheduler.model.JobStatus;
-
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -39,15 +37,7 @@ public class QrtzGlobalJobListener implements org.quartz.JobListener {
             jobException == null ? JobStatus.COMPLETED.name() : JobStatus.FAILED.name());
 
         if(jobException != null) {
-            log.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-            log.error(">> Job: {}", context.getJobDetail().getKey());
-            log.error(">> ErrorMessage: {}", jobException.getMessage());
-            String cause = ExceptionUtil.getCause(jobException.getCause());
-            if (cause != null) {
-                log.error(">> Cause: {}", cause);
-            }
-            log.error(">> Exception: {}", ExceptionUtil.getStackTrace(jobException));
-            log.error(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+            ExceptionUtil.log(jobException);
         }
         qrtzJobHistoryService.updateQrtzJobHistory(context, jobException);
     }
