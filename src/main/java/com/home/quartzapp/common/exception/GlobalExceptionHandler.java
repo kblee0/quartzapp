@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
     //모든 예외를 ApiError 형식으로 반환한다.
     @ExceptionHandler(Exception.class)
-    protected ResponseEntity<?> handleException(Throwable  e) {
+    protected ResponseEntity<?> handleException(Exception  e) {
         ApiException apiException = switch (e) {
             case ApiException ignore -> (ApiException)e;
             case MethodArgumentNotValidException cause -> ApiException.code("CNME0002", cause);

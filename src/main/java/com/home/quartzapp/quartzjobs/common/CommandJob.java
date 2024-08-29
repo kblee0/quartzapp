@@ -55,7 +55,7 @@ public class CommandJob extends QuartzJobBean implements InterruptableJob {
         }
         if(exitCode != 0) {
             log.warn("{} :: The exist code for the \"{}\" command is {}.", jobName, command, exitCode);
-            if(checkExistCode) throw new ErrorCodeException("QJBE0004", new Throwable("Exit code is " + exitCode));
+            if(checkExistCode) throw new ErrorCodeException("QJBE0004", new Exception("Exit code is " + exitCode));
         }
         stopWatch.stop();
         log.info("{} :: [JOB_FINISH] {}, exitCode: {}", jobName, stopWatch.shortSummary(), exitCode);

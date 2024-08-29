@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 @Slf4j
 public class ExceptionUtil {
-    public static String getStackTrace(Throwable e) {
+    public static String getStackTrace(Exception e) {
         if(e == null) return null;
 
         StringBuffer stackTrace = new StringBuffer(e.getClass().getName());
@@ -19,7 +19,7 @@ public class ExceptionUtil {
         return stackTrace.toString();
     }
 
-    public static String getDetailMessage(Throwable e) {
+    public static String getDetailMessage(Exception e) {
         if(e == null) return null;
 
         //@Valid 검증 실패 시 Catch
@@ -32,7 +32,7 @@ public class ExceptionUtil {
         };
     }
 
-    public static ErrorCodeException findErrorCodeException(Throwable exception) {
+    public static ErrorCodeException findErrorCodeException(Exception exception) {
         for(Throwable cause = exception; cause != null; cause = cause.getCause()) {
             if(cause instanceof ErrorCodeException) {
                 return (ErrorCodeException) cause;
@@ -41,7 +41,7 @@ public class ExceptionUtil {
         return null;
     }
 
-    public static void log(Throwable exception) {
+    public static void log(Exception exception) {
         ErrorCodeException errorCodeException = findErrorCodeException(exception);
 
         if(errorCodeException != null) {

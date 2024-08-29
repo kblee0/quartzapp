@@ -30,7 +30,7 @@ public class ApiException extends ErrorCodeException {
         this.httpStatus = ErrorCode.valueOf(this.getErrorCode()).getHttpStatus();
     }
 
-    public ApiException(String errorCode, Throwable cause, Object ...args) {
+    public ApiException(String errorCode, Exception cause, Object ...args) {
         super(errorCode, cause, args);
         this.httpStatus = ErrorCode.valueOf(this.getErrorCode()).getHttpStatus();
     }
@@ -43,7 +43,7 @@ public class ApiException extends ErrorCodeException {
     public static ApiException code(String errorCode, Object ...args) {
         return new ApiException(errorCode, args);
     }
-    public static  ApiException code(String errorCode, Throwable cause, Object ...args) { return new ApiException(errorCode, cause, args); }
+    public static  ApiException code(String errorCode, Exception cause, Object ...args) { return new ApiException(errorCode, cause, args); }
 
     public ApiException setHttpStatus(HttpStatus httpStatus) {
         this.httpStatus = httpStatus;

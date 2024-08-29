@@ -87,7 +87,7 @@ public class SequentialJob extends QuartzJobBean {
 
             try {
                 this.jobExecute(context, jobClassName);
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 if(stopOnError) throw new ErrorCodeException("QJBE0002", e);
                 log.warn("{} :: An error occurred in server job \"{}}\".", jobName, jobClassName);
             }

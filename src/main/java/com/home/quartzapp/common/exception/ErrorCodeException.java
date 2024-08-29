@@ -25,11 +25,11 @@ public class ErrorCodeException extends RuntimeException {
         this.errorCode = errorCode;
     }
 
-    public ErrorCodeException(String errorCode, Throwable cause) {
+    public ErrorCodeException(String errorCode, Exception cause) {
         super(ErrorCode.valueOf(errorCode).getErrorMessageFormat(), cause);
         this.errorCode = errorCode;
     }
-    public ErrorCodeException(String errorCode, Throwable cause, Object ...args) {
+    public ErrorCodeException(String errorCode, Exception cause, Object ...args) {
         super(MessageFormatter.basicArrayFormat(ErrorCode.valueOf(errorCode).getErrorMessageFormat(), args), cause);
         this.errorCode = errorCode;
     }

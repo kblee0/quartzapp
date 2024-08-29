@@ -36,7 +36,7 @@ public class JobDataMapWrapper {
         try {
             return Optional.of((T)obj);
         } catch (Exception e) {
-            Throwable cause = new ClassCastException("The object identified by the key name '" + key + "' is not a " + clazz.getSimpleName().toLowerCase());
+            Exception cause = new ClassCastException("The object identified by the key name '" + key + "' is not a " + clazz.getSimpleName().toLowerCase());
             throw new ErrorCodeException("QJBE0001", cause, key);
         }
     }
@@ -58,7 +58,7 @@ public class JobDataMapWrapper {
                 return Optional.of((T) obj);
             }
         } catch (Exception e) {
-            Throwable cause = new ClassCastException("The object identified by the key name '" + key + "' is not a " + clazz.getSimpleName().toLowerCase());
+            Exception cause = new ClassCastException("The object identified by the key name '" + key + "' is not a " + clazz.getSimpleName().toLowerCase());
             throw new ErrorCodeException("QJBE0001", cause, key);
         }
     }

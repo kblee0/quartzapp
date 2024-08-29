@@ -61,7 +61,7 @@ public class RestClientJob extends QuartzJobBean {
                     .onStatus(HttpStatusCode::isError,
                             (req, res) -> log.error("{} :: RestClientError.onStatus.isError, status={}", jobName, res.getStatusCode().value()))
                     .toEntity(String.class);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             log.error("{} :: RestClientError, url={} {}, body={}", jobName, method, url, requestBody);
             throw new ErrorCodeException("QJBE0002", e);
         }
@@ -75,7 +75,7 @@ public class RestClientJob extends QuartzJobBean {
             } catch(Exception e) {
                 throw new ErrorCodeException("QJBE0004", e);
             }
-            throw new ErrorCodeException("QJBE0003", new Throwable(errorMessage));
+            throw new ErrorCodeException("QJBE0003", new Exception(errorMessage));
         }
 
         log.debug("{} :: Response Body={}", jobName, responseEntity.getBody());
