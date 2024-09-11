@@ -2,8 +2,13 @@ package com.home.quartzapp.scheduler.controller;
 
 import com.home.quartzapp.common.exception.ApiException;
 import com.home.quartzapp.scheduler.dto.JobDataMapDto;
+import com.home.quartzapp.scheduler.dto.JobInfoDto;
+import com.home.quartzapp.scheduler.dto.JobStatusDto;
+import com.home.quartzapp.scheduler.service.SchedulerService;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-
 import lombok.RequiredArgsConstructor;
 import org.quartz.JobKey;
 import org.springframework.http.ResponseEntity;
@@ -12,16 +17,13 @@ import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import com.home.quartzapp.scheduler.dto.JobInfoDto;
-import com.home.quartzapp.scheduler.dto.JobStatusDto;
-import com.home.quartzapp.scheduler.service.SchedulerService;
-
 import java.net.URI;
 
 @Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(value = "/api/v1")
+@Tag(name="Quartz job management API", description="API for Quartz job management")
 public class SchedulerController {
     private final SchedulerService schedulerService;
 
@@ -83,7 +85,7 @@ public class SchedulerController {
     public ResponseEntity<?> commandJob(
             @RequestParam(name = "group", required = false) String jobGroup,
             @RequestParam(name = "name") String jobName,
-            @RequestParam(value = "command") String command,
+            @Parameter(schema = @Schema(allowableValues = {"execute", "pause", "resume", "interrupt", "recover"})) @RequestParam(value = "command") String command,
             @RequestBody(required = false) JobDataMapDto jobDataMapDto) {
         JobKey jobKey = new JobKey(jobName, jobGroup);
 

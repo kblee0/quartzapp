@@ -33,6 +33,7 @@ public enum ErrorCode {
     CMNE0006("Method not allowed.", HttpStatus.METHOD_NOT_ALLOWED),
     CMNE0007("Invalid parameter.", HttpStatus.BAD_REQUEST),
     CMNE0008("Access Denied.", HttpStatus.FORBIDDEN),
+    CNME0009("Not found.", HttpStatus.NOT_FOUND),
     CMNE9999("Miscellaneous errors: {}", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // Quartz Job Error
@@ -42,6 +43,8 @@ public enum ErrorCode {
     QJBE0004("TThe job was processed, but an error occurred while processing the results.", null),
     QJBE0005("Failed to create job for \"{}\".", null),
     QJBE0006("Failed to save {}}.", null),
+    QJBE0007("'{}' batch job does not exist.", null),
+    QJBE0008("'{}' batch job execution  failed.", null),
     QJBE9999("Job threw an unhandled exception.", null),
 
     DMYE9999("Dummy error", null);

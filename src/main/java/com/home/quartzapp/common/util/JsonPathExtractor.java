@@ -6,7 +6,7 @@ import com.jayway.jsonpath.ReadContext;
 import java.util.Optional;
 
 public class JsonPathExtractor {
-    private ReadContext ctx;
+    private final ReadContext ctx;
 
     public JsonPathExtractor(String json) {
         ctx = JsonPath.parse(json);

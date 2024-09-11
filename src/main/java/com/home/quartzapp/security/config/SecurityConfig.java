@@ -32,6 +32,8 @@ public class SecurityConfig {
 
     @Value("${spring.h2.console.enabled}")
     private Boolean h2ConsoleEnabled;
+    @Value("${springdoc.swagger-ui.enabled}")
+    private Boolean swaggerEnabled;
 
     // Configuring HttpSecurity
     @Bean
@@ -40,6 +42,13 @@ public class SecurityConfig {
         if (h2ConsoleEnabled) {
                 http.authorizeHttpRequests(auth -> auth.requestMatchers(PathRequest.toH2Console()).permitAll())
                         .headers(headersConfigurer -> headersConfigurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
+        }
+
+        if(swaggerEnabled) {
+            http.authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/v3/api-docs/**").permitAll()
+                    .requestMatchers("/swagger-ui/**").permitAll()
+                    .requestMatchers("/swagger-resources/**").permitAll());
         }
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth

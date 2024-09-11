@@ -5,18 +5,38 @@ import lombok.Getter;
 import org.quartz.JobDataMap;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Getter
 public class JobDataMapWrapper {
     private final JobDataMap jobDataMap;
+    private final LocalDateTime now;
 
     public JobDataMapWrapper() {
-        jobDataMap = new JobDataMap();
+        this.jobDataMap = new JobDataMap();
+        this.now = LocalDateTime.now();
     }
+
     public JobDataMapWrapper(JobDataMap jobDataMap) {
         this.jobDataMap = jobDataMap;
+        this.now = LocalDateTime.now();
+        jobDataMap.forEach((key, value) -> {
+            if(value instanceof String) this.jobDataMap.put(key, this.nowFunConvert((String)value));
+        });
+    }
+
+    public JobDataMapWrapper(Map<String, Object> jobDataMap) {
+        this.jobDataMap = new JobDataMap(jobDataMap);
+        this.now = LocalDateTime.now();
+        jobDataMap.forEach((key, value) -> {
+            if(value instanceof String) this.jobDataMap.put(key, this.nowFunConvert((String)value));
+        });
     }
 
     public static JobDataMapWrapper create() {
@@ -83,5 +103,20 @@ public class JobDataMapWrapper {
     public JobDataMapWrapper put(String key, Object value) {
         jobDataMap.put(key, value);
         return this;
+    }
+
+    public String nowFunConvert(String template) {
+        Matcher matcher = Pattern.compile("\\$\\{now(:([^\\{\\}#]*?)|())\\}").matcher(template);
+        StringBuffer sb = new StringBuffer();
+
+        while (matcher.find()) {
+            String format = matcher.group(2);
+            String formattedStr = format == null || format.isEmpty() ?
+                    now.toString() :
+                    now.format(DateTimeFormatter.ofPattern(format));
+            matcher.appendReplacement(sb, formattedStr);
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 }

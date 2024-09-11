@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.scheduling.quartz.QuartzJobBean;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 import org.springframework.web.client.RestClient;
 
@@ -21,6 +22,7 @@ import java.util.Map;
 
 @Setter
 @Slf4j
+@Component
 public class RestClientJob extends QuartzJobBean {
     private String jobName;
 

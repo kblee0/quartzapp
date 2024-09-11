@@ -10,6 +10,7 @@ import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.springframework.scheduling.quartz.QuartzJobBean;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 
 import java.lang.reflect.Constructor;
@@ -45,6 +46,7 @@ import java.util.Map;
 @Getter
 @Setter
 @Slf4j
+@Component
 public class SequentialJob extends QuartzJobBean {
     private String jobName;
 
@@ -77,8 +79,9 @@ public class SequentialJob extends QuartzJobBean {
             context.getMergedJobDataMap().clear();
 
             if(subJobDataMap != null) {
-                context.getJobDetail().getJobDataMap().putAll(subJobDataMap);
-                context.getMergedJobDataMap().putAll(subJobDataMap);
+                JobDataMapWrapper convSubJobDataMap = new JobDataMapWrapper(subJobDataMap);
+                context.getJobDetail().getJobDataMap().putAll(convSubJobDataMap.getJobDataMap());
+                context.getMergedJobDataMap().putAll(convSubJobDataMap.getJobDataMap());
             }
             if(prevJobResult != null) {
                 context.getMergedJobDataMap().put("result", prevJobResult);

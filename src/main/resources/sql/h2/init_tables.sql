@@ -7,9 +7,9 @@ create table T_LOGIN_USER
     EMAIL    VARCHAR(255),
     ROLES    VARCHAR(255),
     constraint T_LOGIN_USER_PK
-        primary key (ID)
+        primary key (USER_ID)
 );
 
 create unique index T_LOGIN_USER_ID_IX01
-    on T_LOGIN_USER (ID, LOGIN_ID);
+    on T_LOGIN_USER (USER_ID, LOGIN_ID);
 

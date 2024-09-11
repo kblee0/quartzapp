@@ -9,6 +9,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 @Slf4j
@@ -26,6 +27,7 @@ public class GlobalExceptionHandler {
             //Role Check 오류
             case AuthorizationDeniedException cause -> ApiException.code("CMNE0008", cause);
             case HttpMessageNotReadableException cause -> ApiException.code("CMNE0004", cause);
+            case NoResourceFoundException cause -> ApiException.code("CNME0009", cause);
             default -> ApiException.code("CMNE0001", e, e.getMessage());
         };
         apiException.log();

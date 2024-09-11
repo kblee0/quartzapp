@@ -1,6 +1,5 @@
 package com.home.quartzapp.security.config;
 
-import com.home.quartzapp.common.exception.ApiException;
 import com.home.quartzapp.security.service.JwtService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -37,11 +36,9 @@ public class JwtAuthFilter extends OncePerRequestFilter{
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch(ExpiredJwtException e) {
-                ApiException.code("SCR0002").responseWrite(response);
-                return;
+                log.warn("access token expired. token: {}", token);
             } catch (JwtException e) {
-                ApiException.code("SCR0003").responseWrite(response);
-                return;
+                log.warn("jwt error: msg: {}, token: {}", e.getMessage(), token);
             }
         }
         filterChain.doFilter(request, response);

@@ -8,7 +8,7 @@ import org.slf4j.helpers.MessageFormatter;
 @Slf4j
 public class ErrorCodeException extends RuntimeException {
 
-    private String errorCode;
+    private final String errorCode;
 
     protected String COMMON_MISCELLANEOUS_ERROR = "CMNE9999";
 
