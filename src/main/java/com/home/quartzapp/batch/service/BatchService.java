@@ -26,8 +26,12 @@ public class BatchService {
         batchOut.setEndDt(batchIn.getEndDt());
         batchOut.setRecCnt(batchIn.getRecCnt());
         batchOut.setOutCnt(batchIn.getRecCnt());
-        if(batchIn.getBatchId() == 59) {
-            throw new RuntimeException("Batch Id error > 60");
+        try {
+            if (batchIn.getBatchId() == 59) {
+                throw new RuntimeException("Batch Id error > 60");
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
         batchRepository.insertBatchOut(batchOut);
         batchRepository.updateBatchInStatusByBatchId(batchIn.getBatchId(), "CO");

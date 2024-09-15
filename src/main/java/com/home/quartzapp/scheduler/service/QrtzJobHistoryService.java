@@ -10,7 +10,6 @@ import com.home.quartzapp.scheduler.model.JobStatus;
 import com.home.quartzapp.scheduler.repository.QrtzJobHistoryRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.SchedulerException;
@@ -26,7 +25,6 @@ import java.time.LocalDateTime;
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class QrtzJobHistoryService {
     private final QrtzJobHistoryRepository qrtzJobHistoryRepository;
-    private final ModelMapper modelMapper;
     private final ObjectMapper objectMapper;
 
     public void saveQrtzJobHistory(JobExecutionContext context) {

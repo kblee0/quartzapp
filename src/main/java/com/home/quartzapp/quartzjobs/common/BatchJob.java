@@ -2,7 +2,6 @@ package com.home.quartzapp.quartzjobs.common;
 
 import com.home.quartzapp.common.exception.ErrorCodeException;
 import com.home.quartzapp.quartzjobs.util.JobDataMapWrapper;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobExecutionContext;
@@ -17,9 +16,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @Setter

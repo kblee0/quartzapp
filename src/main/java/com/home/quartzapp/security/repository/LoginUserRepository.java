@@ -1,14 +1,11 @@
 package com.home.quartzapp.security.repository;
 
 import com.home.quartzapp.security.entity.LoginUser;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-@Mapper
-public interface LoginUserRepository {
-    Optional<LoginUser> findByLoginId(@Param("loginId") String loginId);
-    Optional<LoginUser> findByUserId(@Param("userId") String Id);
-    int updateRefreshTokenByUserId(@Param("userId") String loginId, @Param("refreshToken") String refreshToken);
+public interface LoginUserRepository extends JpaRepository<LoginUser, String>, LoginUserRepositoryCustom {
+  Optional<LoginUser> findByUserId(String userId);
+  Optional<LoginUser> findByLoginId(String loginId);
 }

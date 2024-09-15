@@ -52,44 +52,37 @@ public class MyBatisJobConfig {
             put("procDate", "20240903");
             put("status", "RD");
         }};
-        MyBatisCursorItemReader<BatchIn> reader = new MyBatisCursorItemReaderBuilder<BatchIn>()
+
+        return new MyBatisCursorItemReaderBuilder<BatchIn>()
                 .sqlSessionFactory(sqlSessionFactory)
                 .queryId("com.home.quartzapp.batch.repository.BatchRepository.selectBatchInByProcDateAndStatus")
                 .parameterValues(params)
                 .build();
-
-        return reader;
     }
 
     @Bean
     public ItemProcessor<BatchIn, BatchOut> myBatisItemProcessor() {
-        return new ItemProcessor<>() {
-            @Override
-            public BatchOut process(BatchIn item) throws Exception {
-                BatchOut batchOut = new BatchOut();
-                batchOut.setBatchId(item.getBatchId());
-                batchOut.setCreateDt(LocalDateTime.now());
-                batchOut.setStartDt(item.getStartDt());
-                batchOut.setEndDt(item.getEndDt());
-                batchOut.setRecCnt(item.getRecCnt());
-                batchOut.setOutCnt(item.getRecCnt());
+        return item -> {
+            BatchOut batchOut = new BatchOut();
+            batchOut.setBatchId(item.getBatchId());
+            batchOut.setCreateDt(LocalDateTime.now());
+            batchOut.setStartDt(item.getStartDt());
+            batchOut.setEndDt(item.getEndDt());
+            batchOut.setRecCnt(item.getRecCnt());
+            batchOut.setOutCnt(item.getRecCnt());
 
-                return batchOut;
-            }
+            return batchOut;
         };
     }
 
     @Bean
     MyBatisBatchItemWriter<BatchOut> myBatisItemWriter() {
-        MyBatisBatchItemWriter<BatchOut> writer = new MyBatisBatchItemWriterBuilder<BatchOut>()
+        return new MyBatisBatchItemWriterBuilder<BatchOut>()
                 .sqlSessionFactory(sqlSessionFactory)
                 .statementId("com.home.quartzapp.batch.repository.BatchRepository.insertBatchOut")
-                .itemToParameterConverter(item -> {
-                    return new HashMap<>() {{
-                        put("item", item);
-                    }};
-                })
+                .itemToParameterConverter(item -> new HashMap<>() {{
+                    put("item", item);
+                }})
                 .build();
-        return writer;
     }
 }

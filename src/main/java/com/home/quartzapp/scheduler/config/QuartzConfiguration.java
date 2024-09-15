@@ -63,7 +63,7 @@ public class QuartzConfiguration {
 
         schedulerFactoryBean.setOverwriteExistingJobs(true);
         schedulerFactoryBean.setWaitForJobsToCompleteOnShutdown(true);
-        schedulerFactoryBean.setAutoStartup(false);
+        schedulerFactoryBean.setAutoStartup(true);
         schedulerFactoryBean.setGlobalJobListeners(qrtzGlobalJobListener);
 
         return schedulerFactoryBean;

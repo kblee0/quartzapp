@@ -14,7 +14,6 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.skip.SkipLimitExceededException;
 import org.springframework.batch.core.step.skip.SkipPolicy;
-import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -54,7 +53,7 @@ public class MyBatis2JobConfig {
     @Bean
     public Step myBatis2Step(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager) {
         return new StepBuilder("myBatis2Step", jobRepository)
-                .<BatchIn,BatchIn>chunk(1, platformTransactionManager)
+                .<BatchIn,BatchIn>chunk(3, platformTransactionManager)
                 .reader(myBatis2ItemReader())
                 .writer(myBatis2ItemWriter())
                 .faultTolerant()
@@ -69,30 +68,25 @@ public class MyBatis2JobConfig {
             put("procDate", "20240903");
             put("status", "RD");
         }};
-        MyBatisCursorItemReader<BatchIn> reader = new MyBatisCursorItemReaderBuilder<BatchIn>()
+
+        return new MyBatisCursorItemReaderBuilder<BatchIn>()
                 .sqlSessionFactory(sqlSessionFactory)
                 .queryId("com.home.quartzapp.batch.repository.BatchRepository.selectBatchInByProcDateAndStatus")
                 .parameterValues(params)
                 .build();
-
-        return reader;
     }
 
     @Bean
     ItemWriter<BatchIn> myBatis2ItemWriter() {
-        ItemWriter<BatchIn> writer = new ItemWriter<>() {
-            @Override
-            public void write(Chunk<? extends BatchIn> chunk) throws Exception {
-                for (BatchIn item : chunk.getItems()) {
-                    try {
-                        batchService.createBatchOut(item);
-                    } catch (RuntimeException e) {
-                        batchService.forceUpdateBatchInStatus(item.getBatchId(), "ER");
-                        throw new SkipErrorException(e);
-                    }
+        return chunk -> {
+            for (BatchIn item : chunk.getItems()) {
+                try {
+                    batchService.createBatchOut(item);
+                } catch (RuntimeException e) {
+                    batchService.forceUpdateBatchInStatus(item.getBatchId(), "ER");
+                    throw new SkipErrorException(e);
                 }
             }
         };
-        return writer;
     }
 }

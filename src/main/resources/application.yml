@@ -5,16 +5,19 @@ server:
 
 spring:
   profiles:
-    default: dev
+    default: local
   application:
     name: quartzManager
+  h2:
+    console:
+      enabled: false  # H2 Console 사용여부
   jpa:
     database: mysql
     show-sql: true
+    ddl-auto: none
     properties:
       hibernate:
-        hibernate:
-          format_sql: true
+        format_sql: true
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/databasename
@@ -52,11 +55,13 @@ spring:
 
 logging:
   level:
-    root: warn
-    com.home.quartzapp: debug
+    root: info
+    com.home.quartzapp: info
+    org.hibernate.SQL: info
+    org.hibernate.type.descriptor.sql: trace
+    org.hibernate.orm.jdbc.bind: trace
 
 mybatis:
-  mapper-locations: classpath:mapper/**/*.xml
   configuration:
     map-underscore-to-camel-case: true
     default-fetch-size: 500

@@ -27,20 +27,18 @@ import java.util.Map;
 public class JdbcReaderJobConfig {
     @Bean
     public Job jdbcReaderJob(JobRepository jobRepository, DataSource dataSource, PlatformTransactionManager transactionManager) {
-        Job job = new JobBuilder("jdbcReaderJob", jobRepository)
+        return new JobBuilder("jdbcReaderJob", jobRepository)
                 .start(jdbcReaderStep(jobRepository, dataSource, transactionManager))
                 .build();
-        return job;
     }
 
     @Bean
     public Step jdbcReaderStep(JobRepository jobRepository, DataSource dataSource, PlatformTransactionManager transactionManager) {
-        Step step = new StepBuilder("jdbcReaderStep", jobRepository)
+        return new StepBuilder("jdbcReaderStep", jobRepository)
                 .<BatchJobExecution,BatchJobExecution>chunk(5, transactionManager)
                 .reader(jdbcReaderItemReader(dataSource))
                 .writer(jdbcReaderItemWriter())
                 .build();
-        return step;
     }
 
     @Bean
@@ -54,21 +52,18 @@ public class JdbcReaderJobConfig {
         Map<String, Object> params = new HashMap<String, Object>() {{
             put("jobName", "simpleJob");
         }};
-        JdbcCursorItemReader<BatchJobExecution> reader = new JdbcCursorItemReaderBuilder<BatchJobExecution>()
+
+        return new JdbcCursorItemReaderBuilder<BatchJobExecution>()
                 .name("jdbcReaderItemReader")
                 .dataSource(dataSource)
                 .rowMapper(new BeanPropertyRowMapper<BatchJobExecution>(BatchJobExecution.class))
                 .sql(NamedParameterUtils.substituteNamedParameters(SQL_READER, new MapSqlParameterSource(params)))
                 .preparedStatementSetter(new ArgumentPreparedStatementSetter(NamedParameterUtils.buildValueArray(SQL_READER, params)))
                 .build();
-
-        return reader;
     }
 
     @Bean
     public ItemWriter<BatchJobExecution> jdbcReaderItemWriter() {
-        return chunk -> {
-            log.info("Writer: {}", chunk);
-        };
+        return chunk -> log.info("Writer: {}", chunk);
     }
 }
