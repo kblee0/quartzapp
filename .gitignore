@@ -37,6 +37,9 @@ out/
 .vscode/
 /gradle/
 
+### QueryDSL ###
+/src/main/generated/
+
 ### H2 DB ###
 *.lock.db
 *.mv.db
