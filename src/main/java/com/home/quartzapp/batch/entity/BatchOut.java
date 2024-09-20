@@ -7,8 +7,10 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "T_BATCH_OUT", uniqueConstraints = {@UniqueConstraint(columnNames = {"CREATE_DT", "BATCH_ID"})})
+@IdClass(BatchOutPk.class)
+@Table(name = "T_BATCH_OUT")
 public class BatchOut {
+    @Id
     @Column(name = "CREATE_DT")
     LocalDateTime createDt;
 

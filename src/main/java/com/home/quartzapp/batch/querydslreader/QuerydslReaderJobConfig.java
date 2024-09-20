@@ -26,35 +26,35 @@ import static com.home.quartzapp.batch.entity.QBatchIn.batchIn;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-public class QueryDslReaderJobConfig {
+public class QuerydslReaderJobConfig {
     private final EntityManagerFactory entityManagerFactory;
 
     @Bean
-    public Job queryDslReaderJob(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+    public Job querydslReaderJob(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
 
-        return new JobBuilder("QueryDslReaderJob", jobRepository)
-                .start(queryDslReaderStep(jobRepository, transactionManager))
+        return new JobBuilder("QuerydslReaderJob", jobRepository)
+                .start(querydslReaderStep(jobRepository, transactionManager))
                 .build();
     }
 
     @Bean
-    public Step queryDslReaderStep(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+    public Step querydslReaderStep(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
 
-        return new StepBuilder("JpaReaderStep", jobRepository)
+        return new StepBuilder("querydslReaderStep", jobRepository)
                 .<BatchIn, BatchOut>chunk(3, transactionManager)
-                .reader(queryDslReaderJobReader())
-                .processor(queryDslReaderJobProcessor())
-                .writer(queryDslReaderJobWriter())
+                .reader(querydslReaderJobReader())
+                .processor(querydslReaderJobProcessor())
+                .writer(querydslReaderJobWriter())
                 .build();
     }
 
     @Bean
-    public JpaCursorItemReader<BatchIn> queryDslReaderJobReader() {
+    public JpaCursorItemReader<BatchIn> querydslReaderJobReader() {
 
         return new JpaCursorItemReaderBuilder<BatchIn>()
-                .name("jpaCursorItemReader")
+                .name("querydslReaderJobReader")
                 .entityManagerFactory(entityManagerFactory)
-                .queryProvider(new QueryDslQueryProvider<>(jpaQueryFactory -> jpaQueryFactory
+                .queryProvider(new QQueryProvider<>(jpaQueryFactory -> jpaQueryFactory
                         .selectFrom(batchIn)
                         .where(batchIn.batchName.eq("BAT001")
                                 .and(batchIn.status.eq("RD"))
@@ -67,7 +67,7 @@ public class QueryDslReaderJobConfig {
     }
 
     @Bean
-    public ItemProcessor<BatchIn, BatchOut> queryDslReaderJobProcessor() {
+    public ItemProcessor<BatchIn, BatchOut> querydslReaderJobProcessor() {
 
         return item -> {
             BatchOut batchOut = new BatchOut();
@@ -84,7 +84,7 @@ public class QueryDslReaderJobConfig {
     }
 
     @Bean
-    public JpaItemWriter<BatchOut> queryDslReaderJobWriter() {
+    public JpaItemWriter<BatchOut> querydslReaderJobWriter() {
 
         return new JpaItemWriterBuilder<BatchOut>()
                 .entityManagerFactory(entityManagerFactory)

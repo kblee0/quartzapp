@@ -5,6 +5,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 @Component
 public class ApplicationContextProvider implements ApplicationContextAware {
     private static ApplicationContext applicationContext;
@@ -16,5 +18,8 @@ public class ApplicationContextProvider implements ApplicationContextAware {
 
     public static <T> T getBean(String name, Class<T> requiredType) {
         return applicationContext.getBean(name, requiredType);
+    }
+    public static <T> Map<String,T> getBeansOfType(Class<T> requiredType) {
+        return applicationContext.getBeansOfType(requiredType);
     }
 }

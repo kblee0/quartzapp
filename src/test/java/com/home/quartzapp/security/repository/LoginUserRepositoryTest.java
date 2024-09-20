@@ -1,6 +1,6 @@
 package com.home.quartzapp.security.repository;
 
-import com.home.quartzapp.common.config.QueryDSLConfig;
+import com.home.quartzapp.common.config.QuerydslConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +12,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @DataJpaTest
-@Import({QueryDSLConfig.class})
+@Import({QuerydslConfig.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-//@ActiveProfiles("local")
 class LoginUserRepositoryTest {
     @Autowired
     private LoginUserRepository loginUserRepository;

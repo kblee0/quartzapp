@@ -7,12 +7,13 @@ import org.springframework.batch.item.database.orm.AbstractJpaQueryProvider;
 
 import java.util.function.Function;
 
-class QueryDslQueryProvider<T> extends AbstractJpaQueryProvider {
+class QQueryProvider<T> extends AbstractJpaQueryProvider {
     private Function<JPAQueryFactory, JPAQuery<T>> queryFunction;
 
-    public QueryDslQueryProvider(Function<JPAQueryFactory, JPAQuery<T>> queryFunction) {
+    public QQueryProvider(Function<JPAQueryFactory, JPAQuery<T>> queryFunction) {
         this.queryFunction = queryFunction;
     }
+    
     @Override
     public Query createQuery() {
         JPAQueryFactory queryFactory = new JPAQueryFactory(getEntityManager());

@@ -1,6 +1,7 @@
 package com.home.quartzapp.quartzjobs.common;
 
 import com.home.quartzapp.common.exception.ErrorCodeException;
+import com.home.quartzapp.common.util.ApplicationContextProvider;
 import com.home.quartzapp.quartzjobs.util.JobDataMapWrapper;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -11,8 +12,6 @@ import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRestartException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
@@ -21,11 +20,6 @@ import org.springframework.util.StopWatch;
 @Setter
 @Component
 public class BatchJob extends QuartzJobBean {
-    @Autowired
-    private ApplicationContext applicationContext;
-    @Autowired
-    private JobLauncher jobLauncher;
-
     private String jobName;
 
     @Override
@@ -45,7 +39,7 @@ public class BatchJob extends QuartzJobBean {
 
         JobExecution jobExecution;
         try {
-            Job batchJob = applicationContext.getBeansOfType(Job.class).values().stream()
+            Job batchJob = ApplicationContextProvider.getBeansOfType(Job.class).values().stream()
                     .filter(job -> job.getName().equals(batchJobName)).findFirst()
                     .orElseThrow(() -> new ErrorCodeException("QJBE0007", batchJobName));
 
@@ -53,6 +47,7 @@ public class BatchJob extends QuartzJobBean {
 
             jobDataMap.getJobDataMap().forEach((key, value) -> jobParametersBuilder.addJobParameter(key, new JobParameter(value, value.getClass())));
 
+            JobLauncher jobLauncher = ApplicationContextProvider.getBean("jobLauncher", JobLauncher.class);
             jobExecution = jobLauncher.run(batchJob, jobParametersBuilder.toJobParameters());
         } catch (JobInstanceAlreadyCompleteException | JobExecutionAlreadyRunningException | JobParametersInvalidException | JobRestartException e) {
             throw new ErrorCodeException("QJBE0008", e, batchJobName);
