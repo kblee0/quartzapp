@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.configuration.annotation.JobScope;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
@@ -38,6 +40,7 @@ public class QuerydslReaderJobConfig {
     }
 
     @Bean
+    @JobScope
     public Step querydslReaderStep(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
 
         return new StepBuilder("querydslReaderStep", jobRepository)
@@ -49,24 +52,28 @@ public class QuerydslReaderJobConfig {
     }
 
     @Bean
+    @StepScope
     public JpaCursorItemReader<BatchIn> querydslReaderJobReader() {
+
+        QuerydslJpaQueryProvider<BatchIn> queryProvider = new QuerydslJpaQueryProvider<>();
+
+        queryProvider.setJpaQuery(jpaQueryFactory -> jpaQueryFactory
+                .selectFrom(batchIn)
+                .where(batchIn.batchName.eq("BAT001")
+                        .and(batchIn.status.eq("RD"))
+                        .and(batchIn.startDt.goe(LocalDateTime.parse("2024-09-02T00:00:00")))
+                        .and(batchIn.startDt.lt(LocalDateTime.parse("2024-09-03T00:00:00")))));
 
         return new JpaCursorItemReaderBuilder<BatchIn>()
                 .name("querydslReaderJobReader")
                 .entityManagerFactory(entityManagerFactory)
-                .queryProvider(new QQueryProvider<>(jpaQueryFactory -> jpaQueryFactory
-                        .selectFrom(batchIn)
-                        .where(batchIn.batchName.eq("BAT001")
-                                .and(batchIn.status.eq("RD"))
-                                .and(batchIn.startDt.goe(LocalDateTime.parse("2024-09-02T00:00:00")))
-                                .and(batchIn.startDt.lt(LocalDateTime.parse("2024-09-03T00:00:00")))
-                        )
-                ))
+                .queryProvider(queryProvider)
                 .maxItemCount(3)
                 .build();
     }
 
     @Bean
+    @StepScope
     public ItemProcessor<BatchIn, BatchOut> querydslReaderJobProcessor() {
 
         return item -> {
@@ -84,6 +91,7 @@ public class QuerydslReaderJobConfig {
     }
 
     @Bean
+    @StepScope
     public JpaItemWriter<BatchOut> querydslReaderJobWriter() {
 
         return new JpaItemWriterBuilder<BatchOut>()

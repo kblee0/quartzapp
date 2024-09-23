@@ -4,6 +4,8 @@ import com.home.quartzapp.batch.entity.BatchJobExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.configuration.annotation.JobScope;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
@@ -33,6 +35,7 @@ public class JdbcReaderJobConfig {
     }
 
     @Bean
+    @JobScope
     public Step jdbcReaderStep(JobRepository jobRepository, DataSource dataSource, PlatformTransactionManager transactionManager) {
         return new StepBuilder("jdbcReaderStep", jobRepository)
                 .<BatchJobExecution,BatchJobExecution>chunk(5, transactionManager)
@@ -42,6 +45,7 @@ public class JdbcReaderJobConfig {
     }
 
     @Bean
+    @StepScope
     public JdbcCursorItemReader<BatchJobExecution> jdbcReaderItemReader(DataSource dataSource) {
         String SQL_READER = """
             select B.JOB_NAME, A.JOB_EXECUTION_ID, A.START_TIME, A.END_TIME, A.STATUS, A.EXIT_CODE, A.EXIT_MESSAGE
@@ -63,6 +67,7 @@ public class JdbcReaderJobConfig {
     }
 
     @Bean
+    @StepScope
     public ItemWriter<BatchJobExecution> jdbcReaderItemWriter() {
         return chunk -> log.info("Writer: {}", chunk);
     }

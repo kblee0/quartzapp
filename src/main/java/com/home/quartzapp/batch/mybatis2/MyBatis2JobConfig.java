@@ -9,6 +9,8 @@ import org.mybatis.spring.batch.MyBatisCursorItemReader;
 import org.mybatis.spring.batch.builder.MyBatisCursorItemReaderBuilder;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.configuration.annotation.JobScope;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
@@ -51,6 +53,7 @@ public class MyBatis2JobConfig {
     }
 
     @Bean
+    @JobScope
     public Step myBatis2Step(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager) {
         return new StepBuilder("myBatis2Step", jobRepository)
                 .<BatchIn,BatchIn>chunk(3, platformTransactionManager)
@@ -63,6 +66,7 @@ public class MyBatis2JobConfig {
     }
 
     @Bean
+    @StepScope
     public MyBatisCursorItemReader<BatchIn> myBatis2ItemReader() {
         Map<String, Object> params = new HashMap<>() {{
             put("procDate", "20240903");
@@ -77,6 +81,7 @@ public class MyBatis2JobConfig {
     }
 
     @Bean
+    @StepScope
     ItemWriter<BatchIn> myBatis2ItemWriter() {
         return chunk -> {
             for (BatchIn item : chunk.getItems()) {

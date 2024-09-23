@@ -11,6 +11,8 @@ import org.mybatis.spring.batch.builder.MyBatisBatchItemWriterBuilder;
 import org.mybatis.spring.batch.builder.MyBatisCursorItemReaderBuilder;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.configuration.annotation.JobScope;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
@@ -37,6 +39,7 @@ public class MyBatisJobConfig {
     }
 
     @Bean
+    @JobScope
     public Step myBatisStep(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager) {
         return new StepBuilder("myBatisStep", jobRepository)
                 .<BatchIn,BatchOut>chunk(3, platformTransactionManager)
@@ -47,6 +50,7 @@ public class MyBatisJobConfig {
     }
 
     @Bean
+    @StepScope
     public MyBatisCursorItemReader<BatchIn> myBatisItemReader() {
         Map<String, Object> params = new HashMap<>() {{
             put("procDate", "20240903");
@@ -61,6 +65,7 @@ public class MyBatisJobConfig {
     }
 
     @Bean
+    @StepScope
     public ItemProcessor<BatchIn, BatchOut> myBatisItemProcessor() {
         return item -> {
             BatchOut batchOut = new BatchOut();
@@ -76,6 +81,7 @@ public class MyBatisJobConfig {
     }
 
     @Bean
+    @StepScope
     MyBatisBatchItemWriter<BatchOut> myBatisItemWriter() {
         return new MyBatisBatchItemWriterBuilder<BatchOut>()
                 .sqlSessionFactory(sqlSessionFactory)
