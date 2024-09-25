@@ -1,5 +1,6 @@
 package com.home.quartzapp.batch.querydslreader;
 
+import com.querydsl.jpa.JPQLTemplates;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.Query;
@@ -8,15 +9,12 @@ import org.springframework.batch.item.database.orm.AbstractJpaQueryProvider;
 import java.util.function.Function;
 
 class QuerydslJpaQueryProvider<T> extends AbstractJpaQueryProvider {
-    private final JPAQueryFactory jpaQueryFactory;
     private Function<JPAQueryFactory, JPAQuery<T>> queryFunction = null;
 
     public QuerydslJpaQueryProvider() {
-        jpaQueryFactory = new JPAQueryFactory(getEntityManager());
     }
 
     public QuerydslJpaQueryProvider(Function<JPAQueryFactory, JPAQuery<T>> queryFunction) {
-        jpaQueryFactory = new JPAQueryFactory(getEntityManager());
         this.queryFunction = queryFunction;
     }
 
@@ -26,6 +24,7 @@ class QuerydslJpaQueryProvider<T> extends AbstractJpaQueryProvider {
     
     @Override
     public Query createQuery() {
+        JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(JPQLTemplates.DEFAULT, getEntityManager());
         return queryFunction.apply(jpaQueryFactory).createQuery();
     }
 

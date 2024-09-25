@@ -5,8 +5,7 @@ import com.home.quartzapp.batch.entity.BatchOut;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
+import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
@@ -17,6 +16,7 @@ import org.springframework.batch.item.database.JpaCursorItemReader;
 import org.springframework.batch.item.database.JpaItemWriter;
 import org.springframework.batch.item.database.builder.JpaCursorItemReaderBuilder;
 import org.springframework.batch.item.database.builder.JpaItemWriterBuilder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -48,6 +48,12 @@ public class QuerydslReaderJobConfig {
                 .reader(querydslReaderJobReader())
                 .processor(querydslReaderJobProcessor())
                 .writer(querydslReaderJobWriter())
+                .listener(new StepExecutionListener() {
+                    @Override
+                    public void beforeStep(StepExecution stepExecution) {
+                        stepExecution.getJobExecution().getExecutionContext().put("stepStartDate", LocalDateTime.now());
+                    }
+                })
                 .build();
     }
 
@@ -76,17 +82,23 @@ public class QuerydslReaderJobConfig {
     @StepScope
     public ItemProcessor<BatchIn, BatchOut> querydslReaderJobProcessor() {
 
-        return item -> {
-            BatchOut batchOut = new BatchOut();
+        return new ItemProcessor<BatchIn, BatchOut>() {
+            @Value("#{stepExecution.jobExecution}")
+            private JobExecution jobExecution;
 
-            batchOut.setBatchId(item.getBatchId());
-            batchOut.setCreateDt(LocalDateTime.now());
-            batchOut.setStartDt(item.getStartDt());
-            batchOut.setEndDt(item.getEndDt());
-            batchOut.setRecCnt(item.getRecCnt());
-            batchOut.setOutCnt(item.getRecCnt());
+            @Override
+            public BatchOut process(BatchIn item) throws Exception {
+                BatchOut batchOut = new BatchOut();
 
-            return batchOut;
+                batchOut.setBatchId(item.getBatchId());
+                batchOut.setCreateDt((LocalDateTime)jobExecution.getExecutionContext().get("stepStartDate"));
+                batchOut.setStartDt(item.getStartDt());
+                batchOut.setEndDt(item.getEndDt());
+                batchOut.setRecCnt(item.getRecCnt());
+                batchOut.setOutCnt(item.getRecCnt());
+
+                return batchOut;
+            }
         };
     }
 
