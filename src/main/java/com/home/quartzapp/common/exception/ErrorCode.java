@@ -29,10 +29,10 @@ public enum ErrorCode {
     CMNE0002("Request not valid.", HttpStatus.BAD_REQUEST),
     CMNE0003("Method not allowed.", HttpStatus.METHOD_NOT_ALLOWED),
     CMNE0004("Request parse error.", HttpStatus.BAD_REQUEST),
-    CMNE0005("Unauthorized Request.", HttpStatus.UNAUTHORIZED),
+    CMNW0005("Unauthorized Request.", HttpStatus.UNAUTHORIZED),
     CMNE0006("Method not allowed.", HttpStatus.METHOD_NOT_ALLOWED),
     CMNE0007("Invalid parameter.", HttpStatus.BAD_REQUEST),
-    CMNE0008("Access Denied.", HttpStatus.FORBIDDEN),
+    CMNW0008("Access Denied.", HttpStatus.FORBIDDEN),
     CNME0009("Not found.", HttpStatus.NOT_FOUND),
     CMNE9999("Miscellaneous errors: {}", HttpStatus.INTERNAL_SERVER_ERROR),
 

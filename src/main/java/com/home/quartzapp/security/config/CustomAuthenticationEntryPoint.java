@@ -17,8 +17,8 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
                          AuthenticationException authException) {
-        log.error("Request URI: {}", request.getRequestURI());
+        log.warn("Request URI: {}", request.getRequestURI());
 
-        ApiException.code("CMNE0005", authException).log().responseWrite(response);
+        ApiException.code("CMNW0005", authException).log().responseWrite(response);
     }
 }

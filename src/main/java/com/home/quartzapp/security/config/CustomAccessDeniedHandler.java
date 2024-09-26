@@ -17,8 +17,8 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     public void handle(HttpServletRequest request,
                        HttpServletResponse response,
                        AccessDeniedException accessDeniedException) {
-        log.error("Request URI: {}", request.getRequestURI());
+        log.warn("Request URI: {}", request.getRequestURI());
 
-        ApiException.code("CMNE0008", accessDeniedException).log().responseWrite(response);
+        ApiException.code("CMNW0008", accessDeniedException).log().responseWrite(response);
     }
 }

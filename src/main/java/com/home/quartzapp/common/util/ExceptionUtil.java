@@ -45,10 +45,24 @@ public class ExceptionUtil {
         ErrorCodeException errorCodeException = findErrorCodeException(exception);
 
         if(errorCodeException != null) {
-            log.error(">> An ErrorCodeException was thrown :: ErrorCode: {}, ErrorMessage: {}",
-                    errorCodeException.getErrorCode(),
-                    errorCodeException.getMessage(),
-                    exception);
+            switch(errorCodeException.getLevel()) {
+                case FATAL, ERROR:
+                    log.error(">> An ErrorCodeException was thrown :: ErrorCode: {}, ErrorMessage: {}",
+                            errorCodeException.getErrorCode(),
+                            errorCodeException.getMessage(),
+                            exception);
+                    break;
+                case WARN:
+                    log.warn(">> An ErrorCodeException was thrown :: ErrorCode: {}, ErrorMessage: {}",
+                            errorCodeException.getErrorCode(),
+                            errorCodeException.getMessage());
+                    break;
+                case INFO:
+                    log.info(">> An ErrorCodeException was thrown :: ErrorCode: {}, ErrorMessage: {}",
+                            errorCodeException.getErrorCode(),
+                            errorCodeException.getMessage());
+                    break;
+            }
         }
         else {
             log.error(">> An Exception was thrown :: {}", exception.getMessage(), exception);
