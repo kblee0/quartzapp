@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.helpers.MessageFormatter;
 
+import java.util.Arrays;
+
 @Getter
 @Slf4j
 public class ErrorCodeException extends RuntimeException {
@@ -50,12 +52,6 @@ public class ErrorCodeException extends RuntimeException {
     }
 
     public Level getLevel() {
-        return switch(errorCode.substring(3,4)) {
-            case "F" -> Level.FATAL;
-            case "E" -> Level.ERROR;
-            case "W" -> Level.WARN;
-            case "I" -> Level.INFO;
-            default -> throw new IllegalStateException("Unexpected value: " + errorCode.substring(3,4));
-        };
+        return Arrays.stream(Level.values()).filter(v -> v.getCharLevel().equals(errorCode.substring(3,4))).findFirst().orElse(Level.ERROR);
     }
 }
