@@ -16,12 +16,12 @@ public enum ErrorCode {
     SCHE0007("Undefined Job command.", HttpStatus.BAD_REQUEST),
 
     // Security
-    SCR0001("The login Id or password is incorrect.", HttpStatus.UNAUTHORIZED),
-    SCR0002("Credentials have expired.", HttpStatus.UNAUTHORIZED),
-    SCR0003("Rejected because the credentials are not configured properly.", HttpStatus.UNAUTHORIZED),
-    SCR0004("Refresh token have expired.", HttpStatus.UNAUTHORIZED),
-    SCR0005("Refresh token invalid.", HttpStatus.UNAUTHORIZED),
-    SCR0006("User authentication is invalid.", HttpStatus.UNAUTHORIZED),
+    SCRW001("The login Id or password is incorrect.", HttpStatus.UNAUTHORIZED),
+    SCRW002("Credentials have expired.", HttpStatus.UNAUTHORIZED),
+    SCRW003("Rejected because the credentials are not configured properly.", HttpStatus.UNAUTHORIZED),
+    SCRW004("Refresh token have expired.", HttpStatus.UNAUTHORIZED),
+    SCRW005("Refresh token invalid.", HttpStatus.UNAUTHORIZED),
+    SCRW006("User authentication is invalid.", HttpStatus.UNAUTHORIZED),
 
 
     // Common Error

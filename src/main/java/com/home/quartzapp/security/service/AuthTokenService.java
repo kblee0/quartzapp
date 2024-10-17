@@ -43,16 +43,16 @@ public class AuthTokenService {
         catch (Exception e) {
             log.error("authTokenByPassword error :: loginId : {}", authTokenRequestDto.getLoginId());
             throw switch (e) {
-                case BadCredentialsException cause -> ApiException.code("SCR0001", cause);
-                case UsernameNotFoundException cause -> ApiException.code("SCR0001", cause);
-                case AccountLockedException cause -> ApiException.code("SCR0006", cause);
-                case AccountExpiredException cause -> ApiException.code("SCR0006", cause);
-                case DisabledException cause -> ApiException.code("SCR0006", cause);
+                case BadCredentialsException cause -> ApiException.code("SCRW001", cause);
+                case UsernameNotFoundException cause -> ApiException.code("SCRW001", cause);
+                case AccountLockedException cause -> ApiException.code("SCRW006", cause);
+                case AccountExpiredException cause -> ApiException.code("SCRW006", cause);
+                case DisabledException cause -> ApiException.code("SCRW006", cause);
                 default -> ApiException.code("CMNE0001", e, e.getMessage());
             };
         }
 
-        if(!authenticationToken.isAuthenticated()) throw ApiException.code("SCR0001");
+        if(!authenticationToken.isAuthenticated()) throw ApiException.code("SCRW001");
 
         return createJwtToken(authenticationToken);
     }
@@ -62,20 +62,20 @@ public class AuthTokenService {
 
         // Validate refresh token
         if(!jwtService.validateToken(refreshToken.orElse(""))) {
-            throw ApiException.code("SCR0004");
+            throw ApiException.code("SCRW004");
         }
 
         Optional<LoginUser> loginUser = loginUserRepository.findByLoginId(authTokenRequestDto.getLoginId());
 
         if(!loginUser.map(LoginUser::getRefreshToken).equals(refreshToken)) {
-            throw ApiException.code("SCR0005");
+            throw ApiException.code("SCRW005");
         }
 
         // Get Authentication
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         LoginUserDetails loginUserDetails = loginUserDetailsService.loadUserByUsername(authTokenRequestDto.getLoginId());
         if(!loginUserDetails.isAccountNonExpired()||!loginUserDetails.isAccountNonLocked()||!loginUserDetails.isEnabled()) {
-            throw ApiException.code("SCR0006");
+            throw ApiException.code("SCRW006");
         }
 
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginUserDetails, null, loginUserDetails.getAuthorities());
