@@ -95,7 +95,7 @@ public class JwtService {
 
     private Claims extractAllClaims(String token) {
         Jws<Claims> jwsClaims = Jwts
-                .parserBuilder()
+                .parser()
                 .setSigningKey(getSignKey())
                 .build()
                 .parseClaimsJws(token);
@@ -116,7 +116,7 @@ public class JwtService {
     }
     public Boolean validateToken(String token) {
         try {
-            Jws<Claims> claims = Jwts.parserBuilder()
+            Jws<Claims> claims = Jwts.parser()
                     .setSigningKey(getSignKey())
                     .build()
                     .parseClaimsJws(token);
@@ -135,7 +135,7 @@ public class JwtService {
     }
     public Claims parseClaims(String accessToken) {
         try {
-            return Jwts.parserBuilder().setSigningKey(getSignKey()).build().parseClaimsJws(accessToken).getBody();
+            return Jwts.parser().setSigningKey(getSignKey()).build().parseClaimsJws(accessToken).getBody();
         } catch (ExpiredJwtException e) {
             return e.getClaims();
         }
