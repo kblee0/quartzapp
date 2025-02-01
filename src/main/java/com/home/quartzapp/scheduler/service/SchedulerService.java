@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -175,8 +176,8 @@ public class SchedulerService {
                         SimpleScheduleBuilder
                                 .repeatSecondlyForever(jobSimpleTriggerDto.getRepeatIntervalInSeconds())
                                 .withRepeatCount(Optional.ofNullable(jobSimpleTriggerDto.getRepeatCount()).orElse(-1))
-                                .withMisfireHandlingInstructionIgnoreMisfires()
-                            ).build();
+                                .withMisfireHandlingInstructionNextWithRemainingCount()
+                    ).build();
         }
     }
 
@@ -333,7 +334,6 @@ public class SchedulerService {
     public JobStatusDto resumeJob(JobKey jobKey) {
         try {
             Scheduler scheduler = schedulerFactoryBean.getScheduler();
-
             scheduler.resumeJob(jobKey);
         } catch (SchedulerException e) {
             log.error("error occurred while resume job with jobKey : {}", jobKey, e);
