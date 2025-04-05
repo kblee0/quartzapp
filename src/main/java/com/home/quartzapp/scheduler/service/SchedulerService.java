@@ -146,9 +146,12 @@ public class SchedulerService {
                 .withIdentity(jobTriggerDto.getName(), this.getTriggerGroup(jobKey))
                 .withDescription(jobTriggerDto.getDescription());
 
-        if(jobDataMap != null) {
-            triggerBuilder.usingJobData(jobDataMap);
+        if(jobDataMap == null) {
+            jobDataMap = new JobDataMap();
         }
+//        if(jobDataMap != null) {
+//            triggerBuilder.usingJobData(jobDataMap);
+//        }
         if(jobTriggerDto.getStartTime() != null) {
             triggerBuilder.startAt(DateTimeUtil.toDate(jobTriggerDto.getStartTime()));
         }
@@ -161,7 +164,9 @@ public class SchedulerService {
                 throw new IllegalArgumentException("Provided expression " + jobCronTriggerDto.getCronExpression() + " is not a valid cron expression");
             }
             // Misfire : 무시
+            jobDataMap.put("TriggerType", Constants.TTYPE_CRON);
             return triggerBuilder
+                    .usingJobData(jobDataMap)
                     .withSchedule(
                         CronScheduleBuilder
                                 .cronSchedule(jobCronTriggerDto.getCronExpression())
@@ -171,7 +176,9 @@ public class SchedulerService {
             JobSimpleTriggerDto jobSimpleTriggerDto = (JobSimpleTriggerDto) jobTriggerDto;
 
             // Misfire : 무시
+            jobDataMap.put("TriggerType", Constants.TTYPE_SIMPLE);
             return triggerBuilder
+                    .usingJobData(jobDataMap)
                     .withSchedule(
                         SimpleScheduleBuilder
                                 .repeatSecondlyForever(jobSimpleTriggerDto.getRepeatIntervalInSeconds())
