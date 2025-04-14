@@ -1,12 +1,14 @@
 package com.home.quartzapp.scheduler.service;
 
 import com.home.quartzapp.common.util.ExceptionUtil;
-import com.home.quartzapp.scheduler.model.JobStatus;
+import com.home.quartzapp.scheduler.constant.JobStatus;
+import com.home.quartzapp.scheduler.constant.TriggerType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
+import org.quartz.*;
 import org.springframework.stereotype.Component;
+
+import java.sql.Timestamp;
 
 @Slf4j
 @Component
@@ -34,11 +36,37 @@ public class QrtzGlobalJobListener implements org.quartz.JobListener {
         log.debug("jobWasExecuted :: JobKey: {}, InstanceId: {}, Status: {}",
             context.getJobDetail().getKey(),
             context.getFireInstanceId(),
-            jobException == null ? JobStatus.COMPLETED.name() : JobStatus.FAILED.name());
+            jobException == null ? JobStatus.COMPLETED : JobStatus.FAILED);
 
         if(jobException != null) {
             ExceptionUtil.log(jobException);
         }
         qrtzJobHistoryService.updateQrtzJobHistory(context, jobException);
+
+//        JobDetail jobDetail = context.getJobDetail();
+//        JobDataMap jobDataMap = jobDetail.getJobDataMap();
+//
+//        if (jobDataMap != null) {
+//            if (jobDataMap.getString(TriggerType.TTYPE_DATAMAP_NAME).equals(TriggerType.TTYPE_FIXED)) {
+//                Trigger trigger = context.getTrigger();
+//                TriggerKey triggerKey = trigger.getKey();
+//
+//                Timestamp newStartTime = new Timestamp(System.currentTimeMillis() + trigger.get (jobDataMap.getInt("scdulInfo") * 1000));
+//
+//                Trigger newTrigger = trigger.getTriggerBuilder()
+//                        .startAt(newStartTime) // 새로운 시작 시간 설정
+//                        .build();
+//
+//                jobDataMap.put("startTime", String.valueOf(newStartTime));
+//
+//                try {
+//                    context.getScheduler().addJob(jobDetail, true, true);
+//                    context.getScheduler().rescheduleJob(triggerKey, newTrigger);
+//                } catch (SchedulerException e) {
+//                    log.error("[CTG:DEBUG] jobWasExecuted.fixed_delay > Exception > ERROR: {}", e);
+//                    throw new IllegalArgumentException("jobWasExecuted SchedulerException", e);
+//                }
+//            }
+//        }
     }
 }

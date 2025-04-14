@@ -2,11 +2,11 @@ package com.home.quartzapp.scheduler.service;
 
 import com.home.quartzapp.common.exception.ApiException;
 import com.home.quartzapp.common.util.DateTimeUtil;
+import com.home.quartzapp.scheduler.constant.TriggerType;
 import com.home.quartzapp.scheduler.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
-import org.quartz.impl.jdbcjobstore.Constants;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.springframework.scheduling.quartz.SchedulerFactoryBean;
 import org.springframework.stereotype.Component;
@@ -149,9 +149,6 @@ public class SchedulerService {
         if(jobDataMap == null) {
             jobDataMap = new JobDataMap();
         }
-//        if(jobDataMap != null) {
-//            triggerBuilder.usingJobData(jobDataMap);
-//        }
         if(jobTriggerDto.getStartTime() != null) {
             triggerBuilder.startAt(DateTimeUtil.toDate(jobTriggerDto.getStartTime()));
         }
@@ -159,31 +156,34 @@ public class SchedulerService {
             triggerBuilder.endAt(DateTimeUtil.toDate(jobTriggerDto.getEndTime()));
         }
 
-        if(jobTriggerDto instanceof JobCronTriggerDto jobCronTriggerDto) {
-            if (!CronExpression.isValidExpression(jobCronTriggerDto.getCronExpression())) {
-                throw new IllegalArgumentException("Provided expression " + jobCronTriggerDto.getCronExpression() + " is not a valid cron expression");
+        jobDataMap.put(TriggerType.TTYPE_DATAMAP_NAME, jobTriggerDto.getType());
+
+        if(TriggerType.TTYPE_CRON.equals(jobTriggerDto.getType())) {
+            if (!CronExpression.isValidExpression(jobTriggerDto.getCronExpression())) {
+                throw new IllegalArgumentException("Provided expression " + jobTriggerDto.getCronExpression() + " is not a valid cron expression");
             }
             // Misfire : 무시
-            jobDataMap.put("TriggerType", Constants.TTYPE_CRON);
+            jobDataMap.put("TriggerType", TriggerType.TTYPE_CRON);
             return triggerBuilder
                     .usingJobData(jobDataMap)
                     .withSchedule(
-                        CronScheduleBuilder
-                                .cronSchedule(jobCronTriggerDto.getCronExpression())
-                                .withMisfireHandlingInstructionDoNothing()
+                            CronScheduleBuilder
+                                    .cronSchedule(jobTriggerDto.getCronExpression())
+                                    .withMisfireHandlingInstructionDoNothing()
                     ).build();
         } else {
-            JobSimpleTriggerDto jobSimpleTriggerDto = (JobSimpleTriggerDto) jobTriggerDto;
+            int triggerRepeatCount = -1;
+            if(TriggerType.TTYPE_ONCE.equals(jobTriggerDto.getType())) {
+                triggerRepeatCount = 0;
+            }
 
-            // Misfire : 무시
-            jobDataMap.put("TriggerType", Constants.TTYPE_SIMPLE);
             return triggerBuilder
                     .usingJobData(jobDataMap)
                     .withSchedule(
-                        SimpleScheduleBuilder
-                                .repeatSecondlyForever(jobSimpleTriggerDto.getRepeatIntervalInSeconds())
-                                .withRepeatCount(Optional.ofNullable(jobSimpleTriggerDto.getRepeatCount()).orElse(-1))
-                                .withMisfireHandlingInstructionNextWithRemainingCount()
+                            SimpleScheduleBuilder
+                                    .repeatSecondlyForever(jobTriggerDto.getRepeatIntervalInSeconds())
+                                    .withRepeatCount(triggerRepeatCount)
+                                    .withMisfireHandlingInstructionNextWithRemainingCount()
                     ).build();
         }
     }
@@ -239,8 +239,8 @@ public class SchedulerService {
     private JobTriggerDto createJobTriggerDto(Trigger trigger) throws SchedulerException {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         if (trigger instanceof CronTrigger cronTrigger) {
-            return JobCronTriggerDto.builder()
-                    .type(Constants.TTYPE_CRON)
+            return JobTriggerDto.builder()
+                    .type(TriggerType.TTYPE_CRON)
                     .group(trigger.getKey().getGroup())
                     .name(trigger.getKey().getName())
                     .description(trigger.getDescription())
@@ -253,8 +253,8 @@ public class SchedulerService {
         else {
             SimpleTrigger simpleTrigger = (SimpleTrigger)trigger;
 
-            return JobSimpleTriggerDto.builder()
-                    .type(Constants.TTYPE_SIMPLE)
+            return JobTriggerDto.builder()
+                    .type(TriggerType.TTYPE_SIMPLE)
                     .group(trigger.getKey().getGroup())
                     .name(trigger.getKey().getName())
                     .description(trigger.getDescription())
@@ -262,8 +262,6 @@ public class SchedulerService {
                     .endTime(DateTimeUtil.toLocalDateTime(trigger.getEndTime()))
                     .state(scheduler.getTriggerState(trigger.getKey()).name())
                     .repeatIntervalInSeconds((int) (simpleTrigger.getRepeatInterval() / 1000))
-                    .repeatCount(simpleTrigger.getRepeatCount())
-                    .timesTriggered(simpleTrigger.getTimesTriggered())
                     .build();
         }
     }
@@ -309,12 +307,11 @@ public class SchedulerService {
 
     public JobStatusDto executeJob(JobKey jobKey, JobDataMapDto jobDataMapDto) {
         try {
-            JobSimpleTriggerDto jobTriggerDto = JobSimpleTriggerDto.builder()
-                    .type(Constants.TTYPE_SIMPLE)
+            JobTriggerDto jobTriggerDto = JobTriggerDto.builder()
+                    .type(TriggerType.TTYPE_ONCE)
                     .group(this.getTriggerGroup(jobKey))
                     .name("@Once-"+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss:SSS")))
                     .repeatIntervalInSeconds(0)
-                    .repeatCount(0)
                     .build();
             SimpleTrigger trigger = (SimpleTrigger)createTrigger(jobKey, jobTriggerDto, jobDataMapDto != null ? jobDataMapDto.getJobDataMap() : null);
 

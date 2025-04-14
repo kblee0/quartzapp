@@ -6,7 +6,7 @@ import com.home.quartzapp.common.util.DateTimeUtil;
 import com.home.quartzapp.common.util.ExceptionUtil;
 import com.home.quartzapp.scheduler.entity.QrtzJobHistory;
 import com.home.quartzapp.scheduler.entity.QrtzJobHistoryId;
-import com.home.quartzapp.scheduler.model.JobStatus;
+import com.home.quartzapp.scheduler.constant.JobStatus;
 import com.home.quartzapp.scheduler.repository.QrtzJobHistoryRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +40,7 @@ public class QrtzJobHistoryService {
                     .jobName(context.getJobDetail().getKey().getName())
                     .jobGroup(context.getJobDetail().getKey().getGroup())
                     .startTime(DateTimeUtil.toLocalDateTime(context.getFireTime()))
-                    .status(JobStatus.STARTED.name())
+                    .status(JobStatus.STARTED)
                     .jobData(objectMapper.writeValueAsString(context.getTrigger().getJobDataMap()))
                     .build();
             qrtzJobHistoryRepository.save(qrtzJobHistory);
@@ -90,7 +90,7 @@ public class QrtzJobHistoryService {
             QrtzJobHistory qrtzJobHistory = qrtzJobHistoryRepository.findById(qrtzJobHistoryId)
                     .orElseThrow(() -> new IllegalArgumentException("Job start history does not exist."));
 
-            qrtzJobHistory.setStatus(jobException == null ? JobStatus.COMPLETED.name() : JobStatus.FAILED.name());
+            qrtzJobHistory.setStatus(jobException == null ? JobStatus.COMPLETED : JobStatus.FAILED);
             qrtzJobHistory.setEndTime(LocalDateTime.now());
             qrtzJobHistory.setExitCode(exitCode);
             qrtzJobHistory.setExitMessage(exitMessage.isEmpty() ? null : exitMessage.toString());
