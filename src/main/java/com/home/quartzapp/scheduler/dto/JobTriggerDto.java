@@ -11,10 +11,10 @@ import lombok.experimental.SuperBuilder;
 import java.time.LocalDateTime;
 
 @Data
-@NoArgsConstructor(force = true)
 @AllArgsConstructor
+@NoArgsConstructor(force = true)
 @Builder
-public abstract class JobTriggerDto {
+public class JobTriggerDto {
     @JsonIgnore
     private String group;
     @NotBlank

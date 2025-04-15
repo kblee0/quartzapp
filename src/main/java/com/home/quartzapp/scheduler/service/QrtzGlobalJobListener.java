@@ -43,30 +43,28 @@ public class QrtzGlobalJobListener implements org.quartz.JobListener {
         }
         qrtzJobHistoryService.updateQrtzJobHistory(context, jobException);
 
-//        JobDetail jobDetail = context.getJobDetail();
-//        JobDataMap jobDataMap = jobDetail.getJobDataMap();
-//
-//        if (jobDataMap != null) {
-//            if (jobDataMap.getString(TriggerType.TTYPE_DATAMAP_NAME).equals(TriggerType.TTYPE_FIXED)) {
-//                Trigger trigger = context.getTrigger();
-//                TriggerKey triggerKey = trigger.getKey();
-//
-//                Timestamp newStartTime = new Timestamp(System.currentTimeMillis() + trigger.get (jobDataMap.getInt("scdulInfo") * 1000));
-//
-//                Trigger newTrigger = trigger.getTriggerBuilder()
-//                        .startAt(newStartTime) // 새로운 시작 시간 설정
-//                        .build();
-//
-//                jobDataMap.put("startTime", String.valueOf(newStartTime));
-//
-//                try {
-//                    context.getScheduler().addJob(jobDetail, true, true);
-//                    context.getScheduler().rescheduleJob(triggerKey, newTrigger);
-//                } catch (SchedulerException e) {
-//                    log.error("[CTG:DEBUG] jobWasExecuted.fixed_delay > Exception > ERROR: {}", e);
-//                    throw new IllegalArgumentException("jobWasExecuted SchedulerException", e);
-//                }
-//            }
-//        }
+        JobDetail jobDetail = context.getJobDetail();
+        JobDataMap jobDataMap = context.getTrigger().getJobDataMap();
+
+        if (jobDataMap != null) {
+            if (TriggerType.TTYPE_FIXED.equals(jobDataMap.getString(TriggerType.TTYPE_DATAMAP_NAME))) {
+                SimpleTrigger trigger = (SimpleTrigger)context.getTrigger();
+                TriggerKey triggerKey = trigger.getKey();
+
+                Timestamp newStartTime = new Timestamp(System.currentTimeMillis() + trigger.getRepeatInterval());
+
+                SimpleTrigger newTrigger = trigger.getTriggerBuilder()
+                        .startAt(newStartTime)
+                        .build();
+
+                try {
+                    // context.getScheduler().addJob(jobDetail, true, true);
+                    context.getScheduler().rescheduleJob(triggerKey, newTrigger);
+                } catch (SchedulerException e) {
+                    log.error("jobWasExecuted.fixed_delay > Exception > ERROR: {}", e);
+                    throw new IllegalArgumentException("jobWasExecuted SchedulerException", e);
+                }
+            }
+        }
     }
 }

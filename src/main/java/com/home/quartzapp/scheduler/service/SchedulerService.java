@@ -162,8 +162,8 @@ public class SchedulerService {
             if (!CronExpression.isValidExpression(jobTriggerDto.getCronExpression())) {
                 throw new IllegalArgumentException("Provided expression " + jobTriggerDto.getCronExpression() + " is not a valid cron expression");
             }
+            jobDataMap.put("schedulInfo", jobTriggerDto.getCronExpression());
             // Misfire : 무시
-            jobDataMap.put("TriggerType", TriggerType.TTYPE_CRON);
             return triggerBuilder
                     .usingJobData(jobDataMap)
                     .withSchedule(
@@ -172,19 +172,23 @@ public class SchedulerService {
                                     .withMisfireHandlingInstructionDoNothing()
                     ).build();
         } else {
-            int triggerRepeatCount = -1;
-            if(TriggerType.TTYPE_ONCE.equals(jobTriggerDto.getType())) {
-                triggerRepeatCount = 0;
+            SimpleScheduleBuilder simpleScheduleBuilder = SimpleScheduleBuilder.simpleSchedule();
+            simpleScheduleBuilder.withMisfireHandlingInstructionNextWithRemainingCount();
+
+            if(TriggerType.TTYPE_SIMPLE.equals(jobTriggerDto.getType())) {
+                simpleScheduleBuilder.repeatForever();
+            } else if(TriggerType.TTYPE_FIXED.equals(jobTriggerDto.getType())) {
+                simpleScheduleBuilder.repeatForever();
+            } else if(TriggerType.TTYPE_CRON.equals(jobTriggerDto.getType())) {
+                simpleScheduleBuilder.withRepeatCount(0);
             }
+            simpleScheduleBuilder.withIntervalInSeconds(jobTriggerDto.getRepeatIntervalInSeconds());
+
+            jobDataMap.put("schedulInfo", jobTriggerDto.getRepeatIntervalInSeconds());
 
             return triggerBuilder
                     .usingJobData(jobDataMap)
-                    .withSchedule(
-                            SimpleScheduleBuilder
-                                    .repeatSecondlyForever(jobTriggerDto.getRepeatIntervalInSeconds())
-                                    .withRepeatCount(triggerRepeatCount)
-                                    .withMisfireHandlingInstructionNextWithRemainingCount()
-                    ).build();
+                    .withSchedule(simpleScheduleBuilder).build();
         }
     }
 
@@ -254,7 +258,7 @@ public class SchedulerService {
             SimpleTrigger simpleTrigger = (SimpleTrigger)trigger;
 
             return JobTriggerDto.builder()
-                    .type(TriggerType.TTYPE_SIMPLE)
+                    .type(trigger.getJobDataMap().getString(TriggerType.TTYPE_DATAMAP_NAME))
                     .group(trigger.getKey().getGroup())
                     .name(trigger.getKey().getName())
                     .description(trigger.getDescription())
