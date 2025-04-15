@@ -32,11 +32,11 @@ public class SchedulerService {
     public JobStatusDto addJob(JobInfoDto jobInfoDto) {
         try {
             Scheduler scheduler = schedulerFactoryBean.getScheduler();
-            JobDetail jobDetail = this.createJobDetail(jobInfoDto);
+            JobDetail jobDetail = this.buildJobDetail(jobInfoDto);
 
             Set<Trigger> triggers = new HashSet<>();
             if(jobInfoDto.getTriggers() != null)
-                jobInfoDto.getTriggers().forEach(triggerDto -> triggers.add(this.createTrigger(jobDetail.getKey(), triggerDto, null)));
+                jobInfoDto.getTriggers().forEach(triggerDto -> triggers.add(this.buildTrigger(jobDetail.getKey(), triggerDto)));
 
             scheduler.scheduleJob(jobDetail, triggers, false);
             log.debug("Job with jobKey : {} scheduled successfully.", jobDetail.getKey());
@@ -48,11 +48,11 @@ public class SchedulerService {
     }
 
     public JobStatusDto updateJob(JobInfoDto jobInfoDto) {
-        JobDetail jobDetail = this.createJobDetail(jobInfoDto);
+        JobDetail jobDetail = this.buildJobDetail(jobInfoDto);
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         Set<Trigger> triggers = new HashSet<>();
 
-        if(jobInfoDto.getTriggers()!=null) jobInfoDto.getTriggers().forEach(t -> triggers.add(this.createTrigger(jobDetail.getKey(),t,null)));
+        if(jobInfoDto.getTriggers()!=null) jobInfoDto.getTriggers().forEach(t -> triggers.add(this.buildTrigger(jobDetail.getKey(),t)));
 
         try {
             // JobDetail Update
@@ -117,7 +117,7 @@ public class SchedulerService {
     }
 
     /* Private Methods */
-    private JobDetail createJobDetail(JobInfoDto jobInfoDto) {
+    private JobDetail buildJobDetail(JobInfoDto jobInfoDto) {
         JobKey jobKey = new JobKey(jobInfoDto.getName(), jobInfoDto.getGroup());
 
         if(jobInfoDto.getJobDataMap() == null) {
@@ -140,15 +140,14 @@ public class SchedulerService {
         }
     }
 
-    private Trigger createTrigger(JobKey jobKey, JobTriggerDto jobTriggerDto, JobDataMap jobDataMap) {
+    private Trigger buildTrigger(JobKey jobKey, JobTriggerDto jobTriggerDto) {
+        JobDataMap triggerJobDataMap = new JobDataMap();
+
         TriggerBuilder<Trigger> triggerBuilder = TriggerBuilder.newTrigger()
                 .forJob(jobKey)
                 .withIdentity(jobTriggerDto.getName(), this.getTriggerGroup(jobKey))
                 .withDescription(jobTriggerDto.getDescription());
 
-        if(jobDataMap == null) {
-            jobDataMap = new JobDataMap();
-        }
         if(jobTriggerDto.getStartTime() != null) {
             triggerBuilder.startAt(DateTimeUtil.toDate(jobTriggerDto.getStartTime()));
         }
@@ -156,39 +155,38 @@ public class SchedulerService {
             triggerBuilder.endAt(DateTimeUtil.toDate(jobTriggerDto.getEndTime()));
         }
 
-        jobDataMap.put(TriggerType.TTYPE_DATAMAP_NAME, jobTriggerDto.getType());
+        triggerJobDataMap.put(TriggerType.TTYPE_DATAMAP_NAME, jobTriggerDto.getType());
 
         if(TriggerType.TTYPE_CRON.equals(jobTriggerDto.getType())) {
             if (!CronExpression.isValidExpression(jobTriggerDto.getCronExpression())) {
                 throw new IllegalArgumentException("Provided expression " + jobTriggerDto.getCronExpression() + " is not a valid cron expression");
             }
-            jobDataMap.put("schedulInfo", jobTriggerDto.getCronExpression());
-            // Misfire : 무시
+
+            CronScheduleBuilder scheduleBuilder = CronScheduleBuilder
+                    .cronSchedule(jobTriggerDto.getCronExpression())
+                    .withMisfireHandlingInstructionDoNothing();  // Misfire : 무시
             return triggerBuilder
-                    .usingJobData(jobDataMap)
-                    .withSchedule(
-                            CronScheduleBuilder
-                                    .cronSchedule(jobTriggerDto.getCronExpression())
-                                    .withMisfireHandlingInstructionDoNothing()
-                    ).build();
+                    .usingJobData(triggerJobDataMap)
+                    .withSchedule(scheduleBuilder).build();
         } else {
-            SimpleScheduleBuilder simpleScheduleBuilder = SimpleScheduleBuilder.simpleSchedule();
-            simpleScheduleBuilder.withMisfireHandlingInstructionNextWithRemainingCount();
+            SimpleScheduleBuilder scheduleBuilder = SimpleScheduleBuilder.simpleSchedule()
+                    .withMisfireHandlingInstructionNextWithRemainingCount();
 
             if(TriggerType.TTYPE_SIMPLE.equals(jobTriggerDto.getType())) {
-                simpleScheduleBuilder.repeatForever();
+                scheduleBuilder.repeatForever();
             } else if(TriggerType.TTYPE_FIXED.equals(jobTriggerDto.getType())) {
-                simpleScheduleBuilder.repeatForever();
-            } else if(TriggerType.TTYPE_CRON.equals(jobTriggerDto.getType())) {
-                simpleScheduleBuilder.withRepeatCount(0);
+                scheduleBuilder.repeatForever();
+            } else if(TriggerType.TTYPE_ONCE.equals(jobTriggerDto.getType())) {
+                scheduleBuilder.withRepeatCount(0);
             }
-            simpleScheduleBuilder.withIntervalInSeconds(jobTriggerDto.getRepeatIntervalInSeconds());
 
-            jobDataMap.put("schedulInfo", jobTriggerDto.getRepeatIntervalInSeconds());
+            if(jobTriggerDto.getRepeatIntervalInSeconds() != null) {
+                scheduleBuilder.withIntervalInSeconds(jobTriggerDto.getRepeatIntervalInSeconds());
+            }
 
             return triggerBuilder
-                    .usingJobData(jobDataMap)
-                    .withSchedule(simpleScheduleBuilder).build();
+                    .usingJobData(triggerJobDataMap)
+                    .withSchedule(scheduleBuilder).build();
         }
     }
 
@@ -220,7 +218,7 @@ public class SchedulerService {
 
                 jobTriggerStates.add(scheduler.getTriggerState(trigger.getKey()));
 
-                jobInfoDto.getTriggers().add(this.createJobTriggerDto(trigger));
+                jobInfoDto.getTriggers().add(this.buildJobTriggerDto(trigger));
             }
             jobStatusDto.setJobInfoDto(jobInfoDto);
 
@@ -240,7 +238,7 @@ public class SchedulerService {
         }
     }
 
-    private JobTriggerDto createJobTriggerDto(Trigger trigger) throws SchedulerException {
+    private JobTriggerDto buildJobTriggerDto(Trigger trigger) throws SchedulerException {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         if (trigger instanceof CronTrigger cronTrigger) {
             return JobTriggerDto.builder()
@@ -309,7 +307,7 @@ public class SchedulerService {
                 .build();
     }
 
-    public JobStatusDto executeJob(JobKey jobKey, JobDataMapDto jobDataMapDto) {
+    public JobStatusDto executeJob(JobKey jobKey) {
         try {
             JobTriggerDto jobTriggerDto = JobTriggerDto.builder()
                     .type(TriggerType.TTYPE_ONCE)
@@ -317,7 +315,7 @@ public class SchedulerService {
                     .name("@Once-"+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss:SSS")))
                     .repeatIntervalInSeconds(0)
                     .build();
-            SimpleTrigger trigger = (SimpleTrigger)createTrigger(jobKey, jobTriggerDto, jobDataMapDto != null ? jobDataMapDto.getJobDataMap() : null);
+            SimpleTrigger trigger = (SimpleTrigger) buildTrigger(jobKey, jobTriggerDto);
 
             schedulerFactoryBean.getScheduler().scheduleJob(trigger);
         } catch (SchedulerException e) {

@@ -43,7 +43,6 @@ public class QrtzGlobalJobListener implements org.quartz.JobListener {
         }
         qrtzJobHistoryService.updateQrtzJobHistory(context, jobException);
 
-        JobDetail jobDetail = context.getJobDetail();
         JobDataMap jobDataMap = context.getTrigger().getJobDataMap();
 
         if (jobDataMap != null) {
@@ -58,10 +57,9 @@ public class QrtzGlobalJobListener implements org.quartz.JobListener {
                         .build();
 
                 try {
-                    // context.getScheduler().addJob(jobDetail, true, true);
                     context.getScheduler().rescheduleJob(triggerKey, newTrigger);
                 } catch (SchedulerException e) {
-                    log.error("jobWasExecuted.fixed_delay > Exception > ERROR: {}", e);
+                    log.error("jobWasExecuted.fixed_delay > Exception > ERROR:", e);
                     throw new IllegalArgumentException("jobWasExecuted SchedulerException", e);
                 }
             }

@@ -85,14 +85,14 @@ public class SchedulerController {
     public ResponseEntity<?> commandJob(
             @RequestParam(name = "group", required = false) String jobGroup,
             @RequestParam(name = "name") String jobName,
-            @Parameter(schema = @Schema(allowableValues = {"execute", "pause", "resume", "interrupt", "recover"})) @RequestParam(value = "command") String command,
-            @RequestBody(required = false) JobDataMapDto jobDataMapDto) {
+            @Parameter(schema = @Schema(allowableValues = {"execute", "pause", "resume", "interrupt", "recover"})) @RequestParam(value = "command") String command
+            ) {
         JobKey jobKey = new JobKey(jobName, jobGroup);
 
         if (!schedulerService.isJobExists(jobKey)) throw ApiException.code("SCHE0002");
 
         JobStatusDto jobStatusDto = switch (command) {
-            case "execute" -> schedulerService.executeJob(jobKey, jobDataMapDto);
+            case "execute" -> schedulerService.executeJob(jobKey);
             case "pause" -> schedulerService.pauseJob(jobKey);
             case "resume" -> schedulerService.resumeJob(jobKey);
             case "interrupt" -> schedulerService.interruptJob(jobKey);
