@@ -35,7 +35,7 @@ public class LoginUserRepositoryCustomImpl implements LoginUserRepositoryCustom 
     @Override
     public Optional<LoginUser> findByLoginId(String loginId) {
         return Optional.ofNullable(jpaQueryFactory
-                .select(Projections.bean(LoginUser.class, loginUser.userId, loginUser.loginId, loginUser.password, loginUser.email, loginUser.name, loginUser.roles))
+                .select(Projections.bean(LoginUser.class, loginUser.userId, loginUser.loginId, loginUser.password, loginUser.email, loginUser.name, loginUser.roles, loginUser.refreshToken))
                 .from(loginUser)
                 .where(loginUser.loginId.eq(loginId))
                 .fetchOne());
