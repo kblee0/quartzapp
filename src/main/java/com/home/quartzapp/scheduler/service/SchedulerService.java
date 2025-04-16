@@ -68,7 +68,7 @@ public class SchedulerService {
 
                 Trigger findTrigger = triggers.stream().filter(f -> f.getKey().equals(t.getKey())).findFirst().orElse(null);
                 // Trigger for deletion if not in the new list or of a different type
-                if(findTrigger == null || !findTrigger.getClass().equals(t.getClass())) {
+                if(!TriggerType.isEqualTriggerType(findTrigger, t)) {
                     delTriggers.add(t.getKey());
                 } else {
                     // Triggers of the same type change schedule
@@ -150,6 +150,8 @@ public class SchedulerService {
 
         if(jobTriggerDto.getStartTime() != null) {
             triggerBuilder.startAt(DateTimeUtil.toDate(jobTriggerDto.getStartTime()));
+        } else if(TriggerType.TTYPE_ONCE.equals(jobTriggerDto.getType())) {
+            triggerBuilder.startAt(DateTimeUtil.toDate(LocalDateTime.now().plusSeconds(1)));
         }
         if(jobTriggerDto.getEndTime() != null) {
             triggerBuilder.endAt(DateTimeUtil.toDate(jobTriggerDto.getEndTime()));
@@ -216,7 +218,7 @@ public class SchedulerService {
                 Date previousFireTime =  trigger.getPreviousFireTime();
                 JobDataMap jobDataMap = trigger.getJobDataMap();
 
-                if(jobDataMap != null && TriggerType.TTYPE_FIXED.equals(jobDataMap.getString(TriggerType.TTYPE_DATAMAP_NAME))) {
+                if(TriggerType.isFixedTriggerType(trigger)) {
                     previousFireTime = (Date)jobDataMap.get("previousFireTime");
                 }
 
@@ -263,7 +265,7 @@ public class SchedulerService {
             SimpleTrigger simpleTrigger = (SimpleTrigger)trigger;
 
             return JobTriggerDto.builder()
-                    .type(trigger.getJobDataMap().getString(TriggerType.TTYPE_DATAMAP_NAME))
+                    .type(TriggerType.getTriggerType(trigger))
                     .group(trigger.getKey().getGroup())
                     .name(trigger.getKey().getName())
                     .description(trigger.getDescription())

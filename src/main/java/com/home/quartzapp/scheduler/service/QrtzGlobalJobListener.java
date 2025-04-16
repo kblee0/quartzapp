@@ -43,27 +43,31 @@ public class QrtzGlobalJobListener implements org.quartz.JobListener {
         }
         qrtzJobHistoryService.updateQrtzJobHistory(context, jobException);
 
-        JobDataMap jobDataMap = context.getTrigger().getJobDataMap();
+        Trigger trigger;
+        try {
+            trigger = context.getScheduler().getTrigger(context.getTrigger().getKey());
+        } catch (SchedulerException e) {
+            log.error("jobWasExecuted.getTrigger > Exception > ERROR:: triggerKey: {}", context.getTrigger().getKey(), e);
+            throw new IllegalArgumentException("jobWasExecuted SchedulerException", e);
+        }
 
-        if (jobDataMap != null) {
-            if (TriggerType.TTYPE_FIXED.equals(jobDataMap.getString(TriggerType.TTYPE_DATAMAP_NAME))) {
-                SimpleTrigger trigger = (SimpleTrigger)context.getTrigger();
-                TriggerKey triggerKey = trigger.getKey();
+        if (TriggerType.isFixedTriggerType(trigger)) {
+            SimpleTrigger simpleTrigger = (SimpleTrigger)trigger;
+            JobDataMap jobDataMap = simpleTrigger.getJobDataMap();
 
-                Timestamp newStartTime = new Timestamp(System.currentTimeMillis() + trigger.getRepeatInterval());
-                jobDataMap.put("previousFireTime", trigger.getStartTime());
+            Timestamp newStartTime = new Timestamp(System.currentTimeMillis() + simpleTrigger.getRepeatInterval());
+            jobDataMap.put("previousFireTime", simpleTrigger.getStartTime());
 
-                SimpleTrigger newTrigger = trigger.getTriggerBuilder()
-                        .startAt(newStartTime)
-                        .usingJobData(jobDataMap)
-                        .build();
+            SimpleTrigger newTrigger = simpleTrigger.getTriggerBuilder()
+                    .startAt(newStartTime)
+                    .usingJobData(jobDataMap)
+                    .build();
 
-                try {
-                    context.getScheduler().rescheduleJob(triggerKey, newTrigger);
-                } catch (SchedulerException e) {
-                    log.error("jobWasExecuted.fixed_delay > Exception > ERROR:", e);
-                    throw new IllegalArgumentException("jobWasExecuted SchedulerException", e);
-                }
+            try {
+                context.getScheduler().rescheduleJob(simpleTrigger.getKey(), newTrigger);
+            } catch (SchedulerException e) {
+                log.error("jobWasExecuted.fixed_delay > Exception > ERROR:", e);
+                throw new IllegalArgumentException("jobWasExecuted SchedulerException", e);
             }
         }
     }
