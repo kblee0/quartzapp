@@ -213,7 +213,14 @@ public class SchedulerService {
                     .build();
 
             for(Trigger trigger : scheduler.getTriggersOfJob(jobKey)) {
-                jobStatusDto.setLastFiredTime(DateTimeUtil.max(jobStatusDto.getLastFiredTime(), DateTimeUtil.toLocalDateTime(trigger.getPreviousFireTime())));
+                Date previousFireTime =  trigger.getPreviousFireTime();
+                JobDataMap jobDataMap = trigger.getJobDataMap();
+
+                if(jobDataMap != null && TriggerType.TTYPE_FIXED.equals(jobDataMap.getString(TriggerType.TTYPE_DATAMAP_NAME))) {
+                    previousFireTime = (Date)jobDataMap.get("previousFireTime");
+                }
+
+                jobStatusDto.setLastFiredTime(DateTimeUtil.max(jobStatusDto.getLastFiredTime(), DateTimeUtil.toLocalDateTime(previousFireTime)));
                 jobStatusDto.setNextFireTime(DateTimeUtil.min(jobStatusDto.getNextFireTime(), DateTimeUtil.toLocalDateTime(trigger.getNextFireTime())));
 
                 jobTriggerStates.add(scheduler.getTriggerState(trigger.getKey()));

@@ -51,9 +51,11 @@ public class QrtzGlobalJobListener implements org.quartz.JobListener {
                 TriggerKey triggerKey = trigger.getKey();
 
                 Timestamp newStartTime = new Timestamp(System.currentTimeMillis() + trigger.getRepeatInterval());
+                jobDataMap.put("previousFireTime", trigger.getStartTime());
 
                 SimpleTrigger newTrigger = trigger.getTriggerBuilder()
                         .startAt(newStartTime)
+                        .usingJobData(jobDataMap)
                         .build();
 
                 try {
