@@ -143,6 +143,13 @@ public class SchedulerService {
     }
 
     private Trigger buildTrigger(JobKey jobKey, JobTriggerDto jobTriggerDto) {
+        try {
+            TriggerType triggerType = TriggerType.valueOf(jobTriggerDto.getType());
+        } catch (IllegalArgumentException e) {
+            log.error("An invalid trigger type was set in jobTriggerDto :: type : {}", jobTriggerDto.getType(), e);
+            throw ApiException.code("SCHE0008", jobTriggerDto.getType());
+        }
+
         JobDataMap triggerJobDataMap = new JobDataMap();
 
         TriggerBuilder<Trigger> triggerBuilder = TriggerBuilder.newTrigger()

@@ -14,6 +14,7 @@ public enum ErrorCode {
     SCHE0005("It is not an interruptible job.", HttpStatus.BAD_REQUEST),
     SCHE0006("A job cannot be created as it is not a Quartz job class.", HttpStatus.BAD_REQUEST),
     SCHE0007("Undefined Job command.", HttpStatus.BAD_REQUEST),
+    SCHE0008("An invalid trigger type :: type : {}", HttpStatus.BAD_REQUEST),
 
     // Security
     SCRW001("The login Id or password is incorrect.", HttpStatus.UNAUTHORIZED),
