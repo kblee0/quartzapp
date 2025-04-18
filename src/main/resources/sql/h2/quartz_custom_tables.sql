@@ -1,8 +1,8 @@
 create table QRTZ_JOB_HISTORY
 (
     SCHED_NAME    VARCHAR(120) not null,
-    JOB_NAME      VARCHAR(200),
-    JOB_GROUP     VARCHAR(200),
+    JOB_NAME      VARCHAR(200) not null,
+    JOB_GROUP     VARCHAR(200) not null,
     START_TIME    TIMESTAMP  not null,
     END_TIME      TIMESTAMP,
     TRIGGER_NAME  VARCHAR(200) not null,
