@@ -3,7 +3,10 @@ package com.home.quartzapp.scheduler.service;
 import com.home.quartzapp.common.exception.ApiException;
 import com.home.quartzapp.common.util.DateTimeUtil;
 import com.home.quartzapp.scheduler.constant.TriggerType;
-import com.home.quartzapp.scheduler.dto.*;
+import com.home.quartzapp.scheduler.dto.JobInfoDto;
+import com.home.quartzapp.scheduler.dto.JobListDto;
+import com.home.quartzapp.scheduler.dto.JobStatusDto;
+import com.home.quartzapp.scheduler.dto.JobTriggerDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
@@ -13,8 +16,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 
@@ -39,6 +40,7 @@ public class SchedulerService {
                 jobInfoDto.getTriggers().forEach(triggerDto -> triggers.add(this.buildTrigger(jobDetail.getKey(), triggerDto)));
 
             scheduler.scheduleJob(jobDetail, triggers, false);
+            scheduler.pauseJob(jobDetail.getKey());
             log.debug("Job with jobKey : {} scheduled successfully.", jobDetail.getKey());
             return getJobStatus(jobDetail.getKey());
         } catch (SchedulerException e) {
@@ -150,16 +152,14 @@ public class SchedulerService {
 
         if(jobTriggerDto.getStartTime() != null) {
             triggerBuilder.startAt(DateTimeUtil.toDate(jobTriggerDto.getStartTime()));
-        } else if(TriggerType.TTYPE_ONCE.equals(jobTriggerDto.getType())) {
-            triggerBuilder.startAt(DateTimeUtil.toDate(LocalDateTime.now().plusSeconds(1)));
         }
         if(jobTriggerDto.getEndTime() != null) {
             triggerBuilder.endAt(DateTimeUtil.toDate(jobTriggerDto.getEndTime()));
         }
 
-        triggerJobDataMap.put(TriggerType.TTYPE_DATAMAP_NAME, jobTriggerDto.getType());
+        triggerJobDataMap.put(TriggerType.getDataMapName(), jobTriggerDto.getType());
 
-        if(TriggerType.TTYPE_CRON.equals(jobTriggerDto.getType())) {
+        if(TriggerType.CRON.equals(jobTriggerDto.getType())) {
             if (!CronExpression.isValidExpression(jobTriggerDto.getCronExpression())) {
                 throw new IllegalArgumentException("Provided expression " + jobTriggerDto.getCronExpression() + " is not a valid cron expression");
             }
@@ -174,11 +174,11 @@ public class SchedulerService {
             SimpleScheduleBuilder scheduleBuilder = SimpleScheduleBuilder.simpleSchedule()
                     .withMisfireHandlingInstructionNextWithRemainingCount();
 
-            if(TriggerType.TTYPE_SIMPLE.equals(jobTriggerDto.getType())) {
+            if(TriggerType.SIMPLE.equals(jobTriggerDto.getType())) {
                 scheduleBuilder.repeatForever();
-            } else if(TriggerType.TTYPE_FIXED.equals(jobTriggerDto.getType())) {
+            } else if(TriggerType.FIXED.equals(jobTriggerDto.getType())) {
                 scheduleBuilder.repeatForever();
-            } else if(TriggerType.TTYPE_ONCE.equals(jobTriggerDto.getType())) {
+            } else if(TriggerType.ONCE.equals(jobTriggerDto.getType())) {
                 scheduleBuilder.withRepeatCount(0);
             }
 
@@ -218,7 +218,7 @@ public class SchedulerService {
                 Date previousFireTime =  trigger.getPreviousFireTime();
                 JobDataMap jobDataMap = trigger.getJobDataMap();
 
-                if(TriggerType.isFixedTriggerType(trigger)) {
+                if(TriggerType.FIXED.equals(trigger)) {
                     previousFireTime = (Date)jobDataMap.get("previousFireTime");
                 }
 
@@ -251,7 +251,7 @@ public class SchedulerService {
         Scheduler scheduler = schedulerFactoryBean.getScheduler();
         if (trigger instanceof CronTrigger cronTrigger) {
             return JobTriggerDto.builder()
-                    .type(TriggerType.TTYPE_CRON)
+                    .type(TriggerType.CRON.name())
                     .group(trigger.getKey().getGroup())
                     .name(trigger.getKey().getName())
                     .description(trigger.getDescription())
@@ -318,15 +318,15 @@ public class SchedulerService {
 
     public JobStatusDto executeJob(JobKey jobKey) {
         try {
-            JobTriggerDto jobTriggerDto = JobTriggerDto.builder()
-                    .type(TriggerType.TTYPE_ONCE)
-                    .group(this.getTriggerGroup(jobKey))
-                    .name("@Once-"+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss:SSS")))
-                    .repeatIntervalInSeconds(0)
-                    .build();
-            SimpleTrigger trigger = (SimpleTrigger) buildTrigger(jobKey, jobTriggerDto);
-
-            schedulerFactoryBean.getScheduler().scheduleJob(trigger);
+            schedulerFactoryBean.getScheduler().triggerJob(jobKey);
+//            JobTriggerDto jobTriggerDto = JobTriggerDto.builder()
+//                    .type(TriggerType.TTYPE_ONCE)
+//                    .group(this.getTriggerGroup(jobKey))
+//                    .name("@Once-"+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss:SSS")))
+//                    .repeatIntervalInSeconds(0)
+//                    .build();
+//            SimpleTrigger trigger = (SimpleTrigger) buildTrigger(jobKey, jobTriggerDto);
+//            schedulerFactoryBean.getScheduler().scheduleJob(trigger);
         } catch (SchedulerException e) {
             log.error("error occurred while execute job with jobKey : {}", jobKey, e);
             throw ApiException.code("SCHE0004", e, "Error while execute job");

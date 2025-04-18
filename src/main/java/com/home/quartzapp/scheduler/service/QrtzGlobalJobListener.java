@@ -51,7 +51,7 @@ public class QrtzGlobalJobListener implements org.quartz.JobListener {
             throw new IllegalArgumentException("jobWasExecuted SchedulerException", e);
         }
 
-        if (TriggerType.isFixedTriggerType(trigger)) {
+        if (TriggerType.FIXED.equals(trigger)) {
             SimpleTrigger simpleTrigger = (SimpleTrigger)trigger;
             JobDataMap jobDataMap = simpleTrigger.getJobDataMap();
 

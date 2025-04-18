@@ -8,6 +8,7 @@ import lombok.*;
 import org.hibernate.Hibernate;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Builder
@@ -22,10 +23,17 @@ public class QrtzJobHistoryId implements Serializable {
     @Column(name = "SCHED_NAME", nullable = false, length = 120)
     private String schedName;
 
-    @Size(max = 95)
+    @Size(max = 200)
+    @Column(name = "JOB_NAME", length = 200)
+    private String jobName;
+
+    @Size(max = 200)
+    @Column(name = "JOB_GROUP", length = 200)
+    private String jobGroup;
+
     @NotNull
-    @Column(name = "ENTRY_ID", nullable = false, length = 95)
-    private String entryId;
+    @Column(name = "START_TIME", nullable = false)
+    private LocalDateTime startTime;
 
     @Override
     public boolean equals(Object o) {
@@ -33,12 +41,14 @@ public class QrtzJobHistoryId implements Serializable {
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
         QrtzJobHistoryId entity = (QrtzJobHistoryId) o;
         return Objects.equals(this.schedName, entity.schedName) &&
-                Objects.equals(this.entryId, entity.entryId);
+                Objects.equals(this.jobName, entity.jobName) &&
+                Objects.equals(this.jobGroup, entity.jobGroup) &&
+                Objects.equals(this.startTime, entity.startTime);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(schedName, entryId);
+        return Objects.hash(schedName, jobName, jobGroup, startTime);
     }
 
 }

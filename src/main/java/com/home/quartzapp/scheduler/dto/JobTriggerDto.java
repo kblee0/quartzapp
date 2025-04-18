@@ -2,6 +2,7 @@ package com.home.quartzapp.scheduler.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,6 +21,7 @@ public class JobTriggerDto {
     @NotBlank
     private final String name;
     private String description;
+    @Pattern(regexp = "^(CRON|SIMPLE|FIXED|ONCE)$", message = "The trigger type can only be set to CRON, SIMPLE, FIXED, and ONCE.")
     private String type;
     private String state;
 

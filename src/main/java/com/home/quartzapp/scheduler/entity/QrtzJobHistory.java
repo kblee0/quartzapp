@@ -23,6 +23,9 @@ public class QrtzJobHistory {
     @EmbeddedId
     private QrtzJobHistoryId id;
 
+    @Column(name = "END_TIME")
+    private LocalDateTime endTime;
+
     @Size(max = 200)
     @NotNull
     @Column(name = "TRIGGER_NAME", nullable = false, length = 200)
@@ -33,24 +36,9 @@ public class QrtzJobHistory {
     @Column(name = "TRIGGER_GROUP", nullable = false, length = 200)
     private String triggerGroup;
 
-    @Size(max = 200)
-    @Column(name = "JOB_NAME", length = 200)
-    private String jobName;
-
-    @Size(max = 200)
-    @Column(name = "JOB_GROUP", length = 200)
-    private String jobGroup;
-
     @Size(max = 4096)
     @Column(name = "JOB_DATA", length = 4096)
     private String jobData;
-
-    @NotNull
-    @Column(name = "START_TIME", nullable = false)
-    private LocalDateTime startTime;
-
-    @Column(name = "END_TIME")
-    private LocalDateTime endTime;
 
     @Size(max = 16)
     @NotNull

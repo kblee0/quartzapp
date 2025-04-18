@@ -31,17 +31,16 @@ public class QrtzJobHistoryService {
         try {
             QrtzJobHistoryId qrtzJobHistoryId = QrtzJobHistoryId.builder()
                     .schedName(context.getScheduler().getSchedulerName())
-                    .entryId(context.getFireInstanceId())
+                    .jobName(context.getJobDetail().getKey().getName())
+                    .jobGroup(context.getJobDetail().getKey().getGroup())
+                    .startTime(DateTimeUtil.toLocalDateTime(context.getFireTime()))
                     .build();
             QrtzJobHistory qrtzJobHistory = QrtzJobHistory.builder()
                     .id(qrtzJobHistoryId)
                     .triggerName(context.getTrigger().getKey().getName())
                     .triggerGroup(context.getTrigger().getKey().getGroup())
-                    .jobName(context.getJobDetail().getKey().getName())
-                    .jobGroup(context.getJobDetail().getKey().getGroup())
-                    .startTime(DateTimeUtil.toLocalDateTime(context.getFireTime()))
                     .status(JobStatus.STARTED)
-                    .jobData(objectMapper.writeValueAsString(context.getTrigger().getJobDataMap()))
+                    .jobData(objectMapper.writeValueAsString(context.getJobDetail().getJobDataMap()))
                     .build();
             qrtzJobHistoryRepository.save(qrtzJobHistory);
 //        } catch (SchedulerException e) {
@@ -85,7 +84,10 @@ public class QrtzJobHistoryService {
 
             QrtzJobHistoryId qrtzJobHistoryId = QrtzJobHistoryId.builder()
                     .schedName(context.getScheduler().getSchedulerName())
-                    .entryId(context.getFireInstanceId()).build();
+                    .jobName(context.getJobDetail().getKey().getName())
+                    .jobGroup(context.getJobDetail().getKey().getGroup())
+                    .startTime(DateTimeUtil.toLocalDateTime(context.getFireTime()))
+                    .build();
 
             QrtzJobHistory qrtzJobHistory = qrtzJobHistoryRepository.findById(qrtzJobHistoryId)
                     .orElseThrow(() -> new IllegalArgumentException("Job start history does not exist."));
