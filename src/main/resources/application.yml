@@ -41,14 +41,26 @@ spring:
           scheduler:
             instanceName: quartzapp01
             instanceId: AUTO
+            rmi:
+              export: false
+              proxy: false
             classLoadHelper:
               class: com.home.quartzapp.scheduler.exception.ClassNotFoundIgnoringClassLoadHelper
             idleWaitTime: 10000
           threadPool:
             class: org.quartz.simpl.SimpleThreadPool
             threadCount: 5
+            threadPriority: 5
           jobStore:
-            misfireThreshold: 5000
+            misfireThreshold: 10000
+            isClustered: false
+            clusterCheckinInterval: 60000
+            lockHandler:
+              class: org.quartz.impl.jdbcjobstore.UpdateLockRowSemaphore
+            acquireTriggersWithinLock: true
+          plugin:
+            triggHistory:
+              class: org.quartz.plugins.history.LoggingJobHistoryPlugin
   batch:
     job:
       enabled: false

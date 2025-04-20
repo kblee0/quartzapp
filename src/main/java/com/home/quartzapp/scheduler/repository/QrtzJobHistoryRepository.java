@@ -9,6 +9,6 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface QrtzJobHistoryRepository extends JpaRepository<QrtzJobHistory, QrtzJobHistoryId> {
-    @Query("SELECT qh FROM QrtzJobHistory qh WHERE qh.id.jobGroup = :jobGroup AND qh.id.jobName = :jobName")
+    @Query("SELECT qh FROM QrtzJobHistory qh WHERE qh.jobGroup = :jobGroup AND qh.jobName = :jobName")
     List<QrtzJobHistory> findByJobGroupAndJobName(@Param("jobGroup")String jobGroup, @Param("jobName")String jobName);
 }

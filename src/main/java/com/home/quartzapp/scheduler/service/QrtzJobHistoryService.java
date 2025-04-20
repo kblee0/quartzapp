@@ -31,12 +31,13 @@ public class QrtzJobHistoryService {
         try {
             QrtzJobHistoryId qrtzJobHistoryId = QrtzJobHistoryId.builder()
                     .schedName(context.getScheduler().getSchedulerName())
-                    .jobName(context.getJobDetail().getKey().getName())
-                    .jobGroup(context.getJobDetail().getKey().getGroup())
-                    .startTime(DateTimeUtil.toLocalDateTime(context.getFireTime()))
+                    .entryId(context.getFireInstanceId())
                     .build();
             QrtzJobHistory qrtzJobHistory = QrtzJobHistory.builder()
                     .id(qrtzJobHistoryId)
+                    .jobName(context.getJobDetail().getKey().getName())
+                    .jobGroup(context.getJobDetail().getKey().getGroup())
+                    .startTime(DateTimeUtil.toLocalDateTime(context.getFireTime()))
                     .triggerName(context.getTrigger().getKey().getName())
                     .triggerGroup(context.getTrigger().getKey().getGroup())
                     .status(JobStatus.STARTED)
@@ -84,9 +85,7 @@ public class QrtzJobHistoryService {
 
             QrtzJobHistoryId qrtzJobHistoryId = QrtzJobHistoryId.builder()
                     .schedName(context.getScheduler().getSchedulerName())
-                    .jobName(context.getJobDetail().getKey().getName())
-                    .jobGroup(context.getJobDetail().getKey().getGroup())
-                    .startTime(DateTimeUtil.toLocalDateTime(context.getFireTime()))
+                    .entryId(context.getFireInstanceId())
                     .build();
 
             QrtzJobHistory qrtzJobHistory = qrtzJobHistoryRepository.findById(qrtzJobHistoryId)

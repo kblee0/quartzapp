@@ -24,16 +24,8 @@ public class QrtzJobHistoryId implements Serializable {
     private String schedName;
 
     @Size(max = 200)
-    @Column(name = "JOB_NAME", length = 200)
-    private String jobName;
-
-    @Size(max = 200)
-    @Column(name = "JOB_GROUP", length = 200)
-    private String jobGroup;
-
-    @NotNull
-    @Column(name = "START_TIME", nullable = false)
-    private LocalDateTime startTime;
+    @Column(name = "ENTRY_ID", length = 95)
+    private String entryId;
 
     @Override
     public boolean equals(Object o) {
@@ -41,14 +33,12 @@ public class QrtzJobHistoryId implements Serializable {
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
         QrtzJobHistoryId entity = (QrtzJobHistoryId) o;
         return Objects.equals(this.schedName, entity.schedName) &&
-                Objects.equals(this.jobName, entity.jobName) &&
-                Objects.equals(this.jobGroup, entity.jobGroup) &&
-                Objects.equals(this.startTime, entity.startTime);
+                Objects.equals(this.entryId, entity.entryId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(schedName, jobName, jobGroup, startTime);
+        return Objects.hash(schedName, entryId);
     }
 
 }
