@@ -4,7 +4,7 @@ import com.querydsl.jpa.JPQLTemplates;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.Query;
-import org.springframework.batch.item.database.orm.AbstractJpaQueryProvider;
+import org.springframework.batch.infrastructure.item.database.orm.AbstractJpaQueryProvider;
 
 import java.util.function.Function;
 

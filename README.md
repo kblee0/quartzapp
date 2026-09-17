@@ -5,6 +5,6 @@ Supports the function of dynamically managing Quartz Jobs using the management A
 
 Development environment:
 - JAVA 21
-- Spring Boot 3.3.2
+- Spring Boot 4.1.1
 - MyBatis
 - MySql

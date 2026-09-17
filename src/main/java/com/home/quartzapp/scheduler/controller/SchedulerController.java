@@ -1,7 +1,6 @@
 package com.home.quartzapp.scheduler.controller;
 
 import com.home.quartzapp.common.exception.ApiException;
-import com.home.quartzapp.scheduler.dto.JobDataMapDto;
 import com.home.quartzapp.scheduler.dto.JobInfoDto;
 import com.home.quartzapp.scheduler.dto.JobStatusDto;
 import com.home.quartzapp.scheduler.service.SchedulerService;

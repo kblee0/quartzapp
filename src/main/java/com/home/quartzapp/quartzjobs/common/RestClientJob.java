@@ -7,6 +7,10 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.util.Timeout;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +21,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 import org.springframework.web.client.RestClient;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -95,9 +100,16 @@ public class RestClientJob extends QuartzJobBean {
     }
 
     private ClientHttpRequestFactory getClientHttpRequestFactory(int connectTimeoutSec, int requestTimeoutSec) {
-        HttpComponentsClientHttpRequestFactory clientHttpRequestFactory = new HttpComponentsClientHttpRequestFactory();
-        clientHttpRequestFactory.setConnectTimeout(connectTimeoutSec*1000);
-        clientHttpRequestFactory.setConnectionRequestTimeout(requestTimeoutSec*1000);
+        RequestConfig requestConfig = RequestConfig.custom()
+            .setConnectTimeout(Timeout.ofSeconds(connectTimeoutSec))
+            .setResponseTimeout(Timeout.ofSeconds(requestTimeoutSec))
+            .build();
+        CloseableHttpClient httpClient = HttpClients.custom()
+            .setDefaultRequestConfig(requestConfig)
+            .build();
+        HttpComponentsClientHttpRequestFactory clientHttpRequestFactory =
+            new HttpComponentsClientHttpRequestFactory(httpClient);
+        clientHttpRequestFactory.setConnectionRequestTimeout(Duration.ofSeconds(requestTimeoutSec));
         return clientHttpRequestFactory;
     }
 }

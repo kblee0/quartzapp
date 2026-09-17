@@ -2,16 +2,16 @@ package com.home.quartzapp.batch.jdbcreader;
 
 import com.home.quartzapp.batch.entity.BatchJobExecution;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.JdbcCursorItemReader;
-import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
+import org.springframework.batch.infrastructure.item.ItemWriter;
+import org.springframework.batch.infrastructure.item.database.JdbcCursorItemReader;
+import org.springframework.batch.infrastructure.item.database.builder.JdbcCursorItemReaderBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.ArgumentPreparedStatementSetter;
@@ -38,7 +38,8 @@ public class JdbcReaderJobConfig {
     @JobScope
     public Step jdbcReaderStep(JobRepository jobRepository, DataSource dataSource, PlatformTransactionManager transactionManager) {
         return new StepBuilder("jdbcReaderStep", jobRepository)
-                .<BatchJobExecution,BatchJobExecution>chunk(5, transactionManager)
+                .<BatchJobExecution,BatchJobExecution>chunk(5)
+                .transactionManager(transactionManager)
                 .reader(jdbcReaderItemReader(dataSource))
                 .writer(jdbcReaderItemWriter())
                 .build();

@@ -9,14 +9,14 @@ import org.mybatis.spring.batch.MyBatisBatchItemWriter;
 import org.mybatis.spring.batch.MyBatisCursorItemReader;
 import org.mybatis.spring.batch.builder.MyBatisBatchItemWriterBuilder;
 import org.mybatis.spring.batch.builder.MyBatisCursorItemReaderBuilder;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -42,7 +42,8 @@ public class MyBatisJobConfig {
     @JobScope
     public Step myBatisStep(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager) {
         return new StepBuilder("myBatisStep", jobRepository)
-                .<BatchIn,BatchOut>chunk(3, platformTransactionManager)
+                .<BatchIn,BatchOut>chunk(3)
+                .transactionManager(platformTransactionManager)
                 .reader(myBatisItemReader())
                 .processor(myBatisItemProcessor())
                 .writer(myBatisItemWriter())

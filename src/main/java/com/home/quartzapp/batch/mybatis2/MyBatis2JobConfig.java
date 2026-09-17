@@ -7,16 +7,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.batch.MyBatisCursorItemReader;
 import org.mybatis.spring.batch.builder.MyBatisCursorItemReaderBuilder;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.skip.SkipLimitExceededException;
 import org.springframework.batch.core.step.skip.SkipPolicy;
-import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.infrastructure.item.ItemWriter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -56,7 +56,8 @@ public class MyBatis2JobConfig {
     @JobScope
     public Step myBatis2Step(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager) {
         return new StepBuilder("myBatis2Step", jobRepository)
-                .<BatchIn,BatchIn>chunk(3, platformTransactionManager)
+                .<BatchIn,BatchIn>chunk(3)
+                .transactionManager(platformTransactionManager)
                 .reader(myBatis2ItemReader())
                 .writer(myBatis2ItemWriter())
                 .faultTolerant()

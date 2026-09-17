@@ -18,9 +18,9 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
 jwt:
-  secret: PbiQO0ltYWXbbUe48qo3L4DR1u2KeC4+DOQfiKyOEOU=
   expiration-time-seconds: 3600
   refresh-expiration-time-seconds: 86400
+  secret-key: PbiQO0ltYWXbbUe48qo3L4DR1u2KeC4+DOQfiKyOEOU=
 
 springdoc:
   swagger-ui:

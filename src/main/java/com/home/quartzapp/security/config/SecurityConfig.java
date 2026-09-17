@@ -3,7 +3,6 @@ package com.home.quartzapp.security.config;
 import com.home.quartzapp.security.service.LoginUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,6 +14,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -26,45 +26,54 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
-    private final LoginUserDetailsService loginUserDetailsService;
+    private final UserDetailsService userDetailsService;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
-    @Value("${spring.h2.console.enabled}")
+    @Value("${spring.h2.console.enabled:false}")
     private Boolean h2ConsoleEnabled;
-    @Value("${springdoc.swagger-ui.enabled}")
+    @Value("${springdoc.swagger-ui.enabled:false}")
     private Boolean swaggerEnabled;
 
-    // Configuring HttpSecurity
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
+        // ✅ H2 Console 설정
         if (h2ConsoleEnabled) {
-                http.authorizeHttpRequests(auth -> auth.requestMatchers(PathRequest.toH2Console()).permitAll())
-                        .headers(headersConfigurer -> headersConfigurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
+            http.authorizeHttpRequests(auth -> auth
+                            .requestMatchers("/h2-console/**").permitAll())
+                    .headers(headers -> headers
+                            .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
+                    .csrf(csrf -> csrf
+                            .ignoringRequestMatchers("/h2-console/**"));
         }
 
-        if(swaggerEnabled) {
+        // ✅ Swagger 설정
+        if (swaggerEnabled) {
             http.authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/v3/api-docs/**").permitAll()
-                    .requestMatchers("/swagger-ui/**").permitAll()
-                    .requestMatchers("/swagger-resources/**").permitAll());
+                    .requestMatchers(
+                            "/v3/api-docs/**",
+                            "/swagger-ui/**",
+                            "/swagger-resources/**"
+                    ).permitAll());
         }
-        return http.csrf(AbstractHttpConfigurer::disable)
+
+        return http
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                         .requestMatchers("/api/v1/auth/token").permitAll()
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated())
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider())
+                .sessionManagement(sess -> sess
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(c ->
-                        c.authenticationEntryPoint(customAuthenticationEntryPoint).accessDeniedHandler(customAccessDeniedHandler))
+                .exceptionHandling(c -> c
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                        .accessDeniedHandler(customAccessDeniedHandler))
                 .build();
     }
 
-    // Password Encoding
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -72,10 +81,8 @@ public class SecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider(passwordEncoder());
-
-        authenticationProvider.setUserDetailsService(loginUserDetailsService);
-
+        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider(userDetailsService);
+        authenticationProvider.setPasswordEncoder(passwordEncoder());
         return authenticationProvider;
     }
 

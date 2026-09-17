@@ -7,11 +7,12 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.springframework.batch.core.*;
-import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
-import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
-import org.springframework.batch.core.repository.JobRestartException;
+import org.springframework.batch.core.job.Job;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.job.parameters.JobParameter;
+import org.springframework.batch.core.job.parameters.JobParameters;
+import org.springframework.batch.core.job.parameters.JobParametersBuilder;
+import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
@@ -33,23 +34,30 @@ public class BatchJob extends QuartzJobBean {
         // JobDataMap Check
         JobDataMapWrapper jobDataMap = new JobDataMapWrapper(context.getMergedJobDataMap());
 
-        String batchJobName = jobDataMap.getString("batchJobName").orElseThrow(() -> new ErrorCodeException("QJB0001", "bathJobNmae"));
+        String batchJobName = jobDataMap.getString("batchJobName")
+                .orElseThrow(() -> new ErrorCodeException("QJB0001", "batchJobName"));
 
         log.info("{} :: [JOB_START] batchJobName: {}", jobName, batchJobName);
 
         JobExecution jobExecution;
         try {
             Job batchJob = ApplicationContextProvider.getBeansOfType(Job.class).values().stream()
-                    .filter(job -> job.getName().equals(batchJobName)).findFirst()
+                    .filter(job -> job.getName().equals(batchJobName))
+                    .findFirst()
                     .orElseThrow(() -> new ErrorCodeException("QJBE0007", batchJobName));
 
             JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
+            jobDataMap.getJobDataMap().forEach((key, value) ->
+                    jobParametersBuilder.addJobParameter(
+                            new JobParameter<>(key, value, (Class<Object>) value.getClass())
+                    )
+            );
+            JobParameters jobParameters = jobParametersBuilder.toJobParameters();
 
-            jobDataMap.getJobDataMap().forEach((key, value) -> jobParametersBuilder.addJobParameter(key, new JobParameter(value, value.getClass())));
+            JobOperator jobOperator = ApplicationContextProvider.getBean("jobOperator", JobOperator.class);
+            jobExecution = jobOperator.start(batchJob, jobParameters);
 
-            JobLauncher jobLauncher = ApplicationContextProvider.getBean("jobLauncher", JobLauncher.class);
-            jobExecution = jobLauncher.run(batchJob, jobParametersBuilder.toJobParameters());
-        } catch (JobInstanceAlreadyCompleteException | JobExecutionAlreadyRunningException | JobParametersInvalidException | JobRestartException e) {
+        } catch (Exception e) {
             throw new ErrorCodeException("QJBE0008", e, batchJobName);
         }
 

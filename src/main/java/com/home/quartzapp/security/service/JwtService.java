@@ -38,7 +38,7 @@ public class JwtService {
     private final LoginUserDetailsService loginUserDetailsService;
 
     public JwtService(
-            @Value("${jwt.secret}")String secretKey,
+            @Value("${jwt.secret-key}")String secretKey,
             @Value("${jwt.expiration-time-seconds}")long expirationTimeSeconds,
             @Value("${jwt.refresh-expiration-time-seconds}")long refreshExpirationTimeSeconds,
             LoginUserDetailsService loginUserDetailsService) {

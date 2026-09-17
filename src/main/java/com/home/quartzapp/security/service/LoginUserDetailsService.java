@@ -22,13 +22,13 @@ public class LoginUserDetailsService implements UserDetailsService {
         Optional<LoginUser> loginUser = loginUserRepository.findByLoginId(username);
 
         return loginUser.map(LoginUserDetails::new)
-                .orElseThrow(() -> new UsernameNotFoundException("LoginId not found ".concat(username)));
+                .orElseThrow(() -> new UsernameNotFoundException("LoginId not found " + username));
     }
     public LoginUserDetails loadUserByUserId(String userId) throws UsernameNotFoundException {
 
         Optional<LoginUser> loginUser = loginUserRepository.findByUserId(userId);
 
         return loginUser.map(LoginUserDetails::new)
-                .orElseThrow(() -> new UsernameNotFoundException("UserId not found ".concat(userId)));
+                .orElseThrow(() -> new UsernameNotFoundException("UserId not found " + userId));
     }
 }

@@ -83,7 +83,7 @@ mybatis:
 
 jwt:
   header: Authorization
-  secret: PbiQO0ltYWXbbUe48qo3L4DR1u2KeC4+DOQfiKyOEOU=
+  secret-key: PbiQO0ltYWXbbUe48qo3L4DR1u2KeC4+DOQfiKyOEOU=
   expiration-time-seconds: 3600
   refresh-expiration-time-seconds: 86400
 

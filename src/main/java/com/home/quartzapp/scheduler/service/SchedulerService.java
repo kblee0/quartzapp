@@ -121,10 +121,14 @@ public class SchedulerService {
     /* Private Methods */
     private JobDetail buildJobDetail(JobInfoDto jobInfoDto) {
         JobKey jobKey = new JobKey(jobInfoDto.getName(), jobInfoDto.getGroup());
+        JobDataMap jobDataMap;
+
+        jobDataMap = new JobDataMap();
 
         if(jobInfoDto.getJobDataMap() == null) {
-            jobInfoDto.setJobDataMap(new JobDataMap());
-            jobInfoDto.getJobDataMap().put("jobName", jobKey.getName());
+            jobDataMap.put("jobName", jobKey.getName());
+        } else {
+            jobDataMap.putAll(jobInfoDto.getJobDataMap());
         }
         try {
             if(!Job.class.isAssignableFrom(Class.forName(jobInfoDto.getJobClassName()))) {
@@ -135,7 +139,7 @@ public class SchedulerService {
                     .storeDurably()
                     .withIdentity(jobKey)
                     .withDescription(jobInfoDto.getDescription())
-                    .setJobData(jobInfoDto.getJobDataMap())
+                    .setJobData(jobDataMap)
                     .build();
         } catch (ClassNotFoundException e) {
             throw ApiException.code("SCHE0003", e);

@@ -14,6 +14,24 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+    // ✅ HttpMessageNotReadableException 별도 처리 - 원인 로그 출력
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    protected ResponseEntity<?> handleHttpMessageNotReadableException(
+            HttpMessageNotReadableException e
+    ) {
+        Throwable rootCause = e.getMostSpecificCause();
+
+        log.error(">> [PARSE ERROR] rootCauseType = {}", rootCause.getClass().getName());
+        log.error(">> [PARSE ERROR] rootCauseMessage = {}", rootCause.getMessage());
+        log.error(">> [PARSE ERROR] fullException = ", e);  // 전체 스택 출력
+
+        ApiException apiException = ApiException.code("CMNE0004", e);
+        apiException.log();
+
+        return ResponseEntity
+                .status(apiException.getHttpStatus())
+                .body(apiException.body());
+    }
     //모든 예외를 ApiError 형식으로 반환한다.
     @ExceptionHandler(Exception.class)
     protected ResponseEntity<?> handleException(Exception  e) {
